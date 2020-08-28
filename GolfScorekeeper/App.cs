@@ -5,35 +5,45 @@ using System.Text;
 
 using Xamarin.Forms;
 using Tizen.Wearable.CircularUI.Forms;
+using Tizen.NUI.BaseComponents;
 
 namespace GolfScorekeeper
 {
     public class App : Application
     {
         private Button newGameButton;
-        private Button historyButton;
+        private Button courseLookupButton;
         private NavigationPage np;
         private CirclePage p;
         private CirclePage cp;
         private CirclePage cpp;
+        private CirclePage fp;
         private CircleScrollView sv;
         private CircleScrollView sv2;
         private CircleScrollView sv3;
-        private int strokes = 0;
+        private CircleScrollView sv4;
         private Button roundInfoButton;
         private Button strokeButton;
+        private StackLayout finalScreen;
+        //Current number of strokes for a single hole
+        private int strokes = 0;
+        //Current course being played (after selecting new game)
         private string currentCourseName;
         private Courses courses;
-        private int currentHoleCount = 1;
+        //Current hole that the player has navigated to
+        private int currentHole = 1;
+        //Total strokes for the round
         private int currentCourseScore = 0;
+        //Current course score for the furthest hole the player has nagigated to minus the total par score up to that hole
         private int currentCourseScoreRelativeToPar = 0;
         private int[] scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        //The furthest hole that the player has navigated to
         private int furthestHole = 1;
         public App()
         {
             courses = new Courses();
             newGameButton = new Button() { Text = "New Round" };
-            historyButton = new Button() { Text = "Previous Scores" };
+            courseLookupButton = new Button() { Text = "Course Lookup" };
 
             sv = new CircleScrollView
             {
@@ -45,7 +55,7 @@ namespace GolfScorekeeper
                     Children =
                     {
                         newGameButton,
-                        historyButton
+                        courseLookupButton
                     }
                 }
             };
@@ -128,6 +138,17 @@ namespace GolfScorekeeper
                     }
             };
 
+            finalScreen = new StackLayout
+            {
+                Orientation = StackOrientation.Vertical,
+                Children =
+                    {
+                        new Label
+                        {
+                            Text = "Done"
+                        }
+                    }
+            };
 
             sv2 = new CircleScrollView
             {
@@ -157,10 +178,15 @@ namespace GolfScorekeeper
             cpp.RotaryFocusObject = sv3;
             cpp.Content = sv3;
 
+            fp = new CirclePage()
+            {
+                Content = sv4
+            };
+
             NavigationPage np = new NavigationPage(p);
             MainPage = np;
             newGameButton.Clicked += onNewGameButtonClicked;
-            historyButton.Clicked += onHistoryButtonClicked;
+            courseLookupButton.Clicked += onHistoryButtonClicked;
         }
         protected async void onNewGameButtonClicked(object sender, System.EventArgs e)
         {
@@ -189,35 +215,40 @@ namespace GolfScorekeeper
 
         protected void onHistoryButtonClicked(object sender, System.EventArgs e)
         {
-            historyButton.Text = "clicked";
+            courseLookupButton.Text = "clicked";
         }
 
         protected void onNextHoleButtonClicked(object sender, System.EventArgs e)
         {
-            scoreCard[currentHoleCount - 1] = strokes;
+            if (currentHole == 18)
+            {
+                FinishRound();
+                return;
+            }
+            scoreCard[currentHole - 1] = strokes;
             currentCourseScore = scoreCard.Sum();
             currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
 
             //Ensure your relative par is based on the furthest hole that you have visited in the app
-            if (currentHoleCount == furthestHole)
+            if (currentHole == furthestHole)
             {
                 furthestHole += 1;
             }
-            currentHoleCount += 1;
+            currentHole += 1;
             
             UpdateButtonsNext();
         }
 
         protected void onPreviousHoleButtonClicked(object sender, System.EventArgs e)
         {
-            if (currentHoleCount == 1)
+            if (currentHole == 1)
             {
                 return;
             }
-            scoreCard[currentHoleCount - 1] = strokes;
+            scoreCard[currentHole - 1] = strokes;
             currentCourseScore = scoreCard.Sum();
             currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
-            currentHoleCount -= 1;
+            currentHole -= 1;
 
             UpdateButtonsPrevious();
         }
@@ -233,8 +264,8 @@ namespace GolfScorekeeper
             {
                 relativeCourseScoreString = Convert.ToString(currentCourseScoreRelativeToPar);
             }
-            roundInfoButton.Text = "Hole " + currentHoleCount + " | Par " + Convert.ToString(courses.getHolePar(currentCourseName, currentHoleCount)) + " | " + relativeCourseScoreString;
-            strokes = scoreCard[currentHoleCount - 1];
+            roundInfoButton.Text = "Hole " + currentHole + " | Par " + Convert.ToString(courses.getHolePar(currentCourseName, currentHole)) + " | " + relativeCourseScoreString;
+            strokes = scoreCard[currentHole - 1];
             strokeButton.Text = Convert.ToString(strokes);
         }
 
@@ -249,9 +280,57 @@ namespace GolfScorekeeper
             {
                 relativeCourseScoreString = Convert.ToString(currentCourseScoreRelativeToPar);
             }
-            roundInfoButton.Text = "Hole " + currentHoleCount + " | Par " + Convert.ToString(courses.getHolePar(currentCourseName, currentHoleCount)) + " | " + relativeCourseScoreString;
-            strokes = scoreCard[currentHoleCount - 1];
+            roundInfoButton.Text = "Hole " + currentHole + " | Par " + Convert.ToString(courses.getHolePar(currentCourseName, currentHole)) + " | " + relativeCourseScoreString;
+            strokes = scoreCard[currentHole - 1];
             strokeButton.Text = Convert.ToString(strokes);
+        }
+
+        public void FinishRound()
+        {
+            finalScreen = new StackLayout
+            {
+                HorizontalOptions = LayoutOptions.Center,
+                Children =
+                    {
+                        new Label
+                        {
+                            Text = currentCourseName
+                        }
+                    }
+            };
+
+            sv4 = new CircleScrollView
+            {
+                Content = finalScreen
+            };
+
+            fp = new CirclePage()
+            {
+                Content = sv4
+            };
+
+            for (int i = 0; i < 18; i++)
+            {
+                finalScreen.Children.Add(new Label
+                {
+                    Text = Convert.ToString(i) + ": " + courses.getHolePar(currentCourseName, i + 1) + " | " + scoreCard[i]
+                });
+            }
+
+
+            MainPage.Navigation.PushAsync(fp);
+            MainPage.Navigation.RemovePage(cp);
+            MainPage.Navigation.RemovePage(cpp);
+            //Reset for the next round
+            currentHole = 1;
+            furthestHole = 1;
+            currentCourseScore = 0;
+            currentCourseScoreRelativeToPar = 0;
+            for (int i = 0; i < 18; i++)
+            {
+                scoreCard[i] = 0;
+            }
+            currentCourseName = "";
         }
 
         protected override void OnStart()
