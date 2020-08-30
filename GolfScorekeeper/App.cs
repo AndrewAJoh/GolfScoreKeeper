@@ -14,17 +14,15 @@ namespace GolfScorekeeper
         private Button newGameButton;
         private Button courseLookupButton;
         private NavigationPage np;
-        private CirclePage p;
-        private CirclePage cp;
-        private CirclePage cpp;
+        private CirclePage mp;
+        private CirclePage sp;
+        private CirclePage ssp;
         private CirclePage fp;
-        private CircleScrollView sv;
-        private CircleScrollView sv2;
-        private CircleScrollView sv3;
-        private CircleScrollView sv4;
+        private CircleStackLayout homePageLayout;
+        private CircleScrollView courseSelectionLayout;
         private Button roundInfoButton;
         private Button strokeButton;
-        private StackLayout finalScreen;
+        private StackLayout finalScreenLayout;
         //Current number of strokes for a single hole
         private int strokes = 0;
         //Current course being played (after selecting new game)
@@ -42,40 +40,25 @@ namespace GolfScorekeeper
         public App()
         {
             courses = new Courses();
+
             newGameButton = new Button() { Text = "New Round" };
             courseLookupButton = new Button() { Text = "Course Lookup" };
+            roundInfoButton = new Button() { Text = "" };
+            Button addStrokeButton = new Button() { Text = "+1" };
+            strokeButton = new Button() { Text = "0" };
+            Button subtractStrokeButton = new Button() { Text = "-1" };
+            Button nextHoleButton = new Button() { Text = "Next Hole" };
+            Button previousHoleButton = new Button() { Text = "Prev Hole" };
 
-            sv = new CircleScrollView
-            {
+            addStrokeButton.Clicked += onAddStrokeButtonClicked;
+            strokeButton.Clicked += onStrokeButtonClicked;
+            subtractStrokeButton.Clicked += onSubtractStrokeButtonClicked;
+            nextHoleButton.Clicked += onNextHoleButtonClicked;
+            previousHoleButton.Clicked += onPreviousHoleButtonClicked;
 
-                Content = new StackLayout
-                {
-
-                    Orientation = StackOrientation.Vertical,
-                    Children =
-                    {
-                        newGameButton,
-                        courseLookupButton
-                    }
-                }
-            };
-
-            StackLayout coursesLayout = new StackLayout
-            {
-
-                Orientation = StackOrientation.Vertical,
-                Children =
-                    {
-                        new Label
-                        {
-                            Text = "welcome to the 2nd page"
-                        }
-                    }
-            };
+            StackLayout coursesLayout = new CircleStackLayout{};
 
             List<string> courseList = courses.getCourseList();
-            //Currently unused but could be useful potentially
-            List<Button> buttonList = new List<Button>();
 
             for (int i = 0; i<courseList.Count(); i++)
             {
@@ -84,119 +67,108 @@ namespace GolfScorekeeper
                     Text = courseList[i]
                 };
                 newGameButton.Clicked += onNewGameCourseSelectionButtonClicked;
-                buttonList.Add(newGameButton);
                 coursesLayout.Children.Add(newGameButton);
             }
 
-            roundInfoButton = new Button()
-            {
-                Text = ""
-            };
+            AbsoluteLayout.SetLayoutBounds(roundInfoButton, new Rectangle(0.5, 0, 155, 100));
+            AbsoluteLayout.SetLayoutFlags(roundInfoButton, AbsoluteLayoutFlags.PositionProportional);
 
-            Button addStrokeButton = new Button()
-            {
-                Text = "+1"
-            };
+            AbsoluteLayout.SetLayoutBounds(addStrokeButton, new Rectangle(0.5, 0.75, 155, 120));
+            AbsoluteLayout.SetLayoutFlags(addStrokeButton, AbsoluteLayoutFlags.PositionProportional);
 
-            strokeButton = new Button()
-            {
-                Text = ""
-            };
+            AbsoluteLayout.SetLayoutBounds(strokeButton, new Rectangle(0.5, 0.363, 60, 60));
+            AbsoluteLayout.SetLayoutFlags(strokeButton, AbsoluteLayoutFlags.PositionProportional);
 
-            Button subtractStrokeButton = new Button()
-            {
-                Text = "-1"
-            };
+            AbsoluteLayout.SetLayoutBounds(subtractStrokeButton, new Rectangle(0.5, 1, 155, 58));
+            AbsoluteLayout.SetLayoutFlags(subtractStrokeButton, AbsoluteLayoutFlags.PositionProportional);
 
-            Button nextHoleButton = new Button()
-            {
-                Text = "Next Hole"
-            };
+            AbsoluteLayout.SetLayoutBounds(nextHoleButton, new Rectangle(1, 0, 100, 360));
+            AbsoluteLayout.SetLayoutFlags(nextHoleButton, AbsoluteLayoutFlags.PositionProportional);
 
-            Button previousHoleButton = new Button()
-            {
-                Text = "Previous Hole"
-            };
+            AbsoluteLayout.SetLayoutBounds(previousHoleButton, new Rectangle(0, 0, 100, 360));
+            AbsoluteLayout.SetLayoutFlags(previousHoleButton, AbsoluteLayoutFlags.PositionProportional);
 
-            addStrokeButton.Clicked += onAddStrokeButtonClicked;
-            strokeButton.Clicked += onStrokeButtonClicked;
-            subtractStrokeButton.Clicked += onSubtractStrokeButtonClicked;
-            nextHoleButton.Clicked += onNextHoleButtonClicked;
-            previousHoleButton.Clicked += onPreviousHoleButtonClicked;
-
-            StackLayout parTracker = new StackLayout
+            homePageLayout = new CircleStackLayout
             {
-                Orientation = StackOrientation.Vertical,
                 Children =
-                    {
-                        roundInfoButton,
-                        addStrokeButton,
-                        strokeButton,
-                        subtractStrokeButton,
-                        nextHoleButton,
-                        previousHoleButton
-                    }
+                {
+                    newGameButton,
+                    courseLookupButton
+                }
             };
 
-            finalScreen = new StackLayout
-            {
-                Orientation = StackOrientation.Vertical,
-                Children =
-                    {
-                        new Label
-                        {
-                            Text = "Done"
-                        }
-                    }
-            };
-
-            sv2 = new CircleScrollView
+            courseSelectionLayout = new CircleScrollView
             {
                 Content = coursesLayout
             };
 
-            sv3 = new CircleScrollView
+            AbsoluteLayout parTrackerLayout = new AbsoluteLayout()
             {
-                Content = parTracker
+                Children =
+                {
+                    roundInfoButton,
+                    addStrokeButton,
+                    strokeButton,
+                    subtractStrokeButton,
+                    nextHoleButton,
+                    previousHoleButton
+                }
             };
 
-            p = new CirclePage();
-            p.RotaryFocusObject = sv;
-            p.Content = sv;
-
-            cp = new CirclePage()
+            finalScreenLayout = new StackLayout
             {
-                Content = sv2
+                HorizontalOptions = LayoutOptions.Center,
+                Children =
+                    {
+                        new Label
+                        {
+                            Text = ""
+                        }
+                    }
             };
-            cp.RotaryFocusObject = sv2;
-            cp.Content = sv2;
 
-            cpp = new CirclePage()
+            //MainPage
+            mp = new CirclePage() {
+                Content = homePageLayout
+            };
+
+            //SubPage
+            sp = new CirclePage()
             {
-                Content = sv3
+                Content = courseSelectionLayout
             };
-            cpp.RotaryFocusObject = sv3;
-            cpp.Content = sv3;
 
+            //SubSubPage
+            ssp = new CirclePage()
+            {
+                Content = parTrackerLayout,
+            };
+
+            //FinalPage (results screen)
             fp = new CirclePage()
             {
-                Content = sv4
+                Content = finalScreenLayout
             };
 
-            NavigationPage np = new NavigationPage(p);
+            NavigationPage np = new NavigationPage(mp);
+            NavigationPage.SetHasNavigationBar(mp, false);
+            NavigationPage.SetHasNavigationBar(sp, false);
+            NavigationPage.SetHasNavigationBar(ssp, false);
+            NavigationPage.SetHasNavigationBar(fp, false);
+
             MainPage = np;
             newGameButton.Clicked += onNewGameButtonClicked;
             courseLookupButton.Clicked += onHistoryButtonClicked;
         }
         protected async void onNewGameButtonClicked(object sender, System.EventArgs e)
         {
-            await MainPage.Navigation.PushAsync(cp);
+            await MainPage.Navigation.PushAsync(sp);
         }
         protected async void onNewGameCourseSelectionButtonClicked(object sender, System.EventArgs e)
         {
             currentCourseName = (sender as Button).Text;
             roundInfoButton.Text = "Hole 1 | Par " + Convert.ToString(courses.getHolePar(currentCourseName, 1)) + " | 0";
-            await MainPage.Navigation.PushAsync(cpp);
+            await MainPage.Navigation.PushAsync(ssp);
         }
         protected void onAddStrokeButtonClicked(object sender, System.EventArgs e)
         {
@@ -209,6 +181,10 @@ namespace GolfScorekeeper
         }
         protected void onSubtractStrokeButtonClicked(object sender, System.EventArgs e)
         {
+            if (strokes == 0)
+            {
+                return;
+            }
             strokes -= 1;
             strokeButton.Text = Convert.ToString(strokes);
         }
@@ -286,41 +262,22 @@ namespace GolfScorekeeper
         }
 
         public void FinishRound()
-        {
-            finalScreen = new StackLayout
-            {
-                HorizontalOptions = LayoutOptions.Center,
-                Children =
-                    {
-                        new Label
-                        {
-                            Text = currentCourseName
-                        }
-                    }
-            };
-
-            sv4 = new CircleScrollView
-            {
-                Content = finalScreen
-            };
-
-            fp = new CirclePage()
-            {
-                Content = sv4
-            };
+        { 
+            //Todo: remove child labels from previous game every time the player plays a round
+            Label l = (Label) finalScreenLayout.Children.First();
+            l.Text = currentCourseName;
 
             for (int i = 0; i < 18; i++)
             {
-                finalScreen.Children.Add(new Label
+                finalScreenLayout.Children.Add(new Label
                 {
                     Text = Convert.ToString(i) + ": " + courses.getHolePar(currentCourseName, i + 1) + " | " + scoreCard[i]
                 });
             }
-
-
+            MainPage.BackgroundColor = Color.Yellow;
             MainPage.Navigation.PushAsync(fp);
-            MainPage.Navigation.RemovePage(cp);
-            MainPage.Navigation.RemovePage(cpp);
+            MainPage.Navigation.RemovePage(sp);
+            MainPage.Navigation.RemovePage(ssp);
             //Reset for the next round
             currentHole = 1;
             furthestHole = 1;
