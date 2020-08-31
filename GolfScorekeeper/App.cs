@@ -11,7 +11,7 @@ namespace GolfScorekeeper
 {
     public class App : Application
     {
-        private Button newGameButton;
+        private Button scoreTrackerButton;
         private Button courseLookupButton;
         private NavigationPage np;
         private CirclePage mp;
@@ -27,7 +27,7 @@ namespace GolfScorekeeper
         private Button strokeButton;
         private StackLayout finalLayout;
         //Current number of strokes for a single hole
-        private int strokes = 0;
+        private int strokes;
         //Current course being played (after selecting new game)
         private string currentCourseName;
         private Courses courses;
@@ -46,7 +46,7 @@ namespace GolfScorekeeper
         {
             courses = new Courses();
 
-            newGameButton = new Button() { Text = "New Round" };
+            scoreTrackerButton = new Button() { Text = "Score Tracker" };
             courseLookupButton = new Button() { Text = "Course Lookup" };
             roundInfoButton = new Button() { Text = "" };
             overallButton = new Button() { Text = "" };
@@ -82,12 +82,12 @@ namespace GolfScorekeeper
 
             for (int i = 0; i<courseList.Count(); i++)
             {
-                Button newGameButton = new Button()
+                Button courseNameButton = new Button()
                 {
                     Text = courseList[i]
                 };
-                newGameButton.Clicked += determineNewOrResumeGame;
-                coursesLayout.Children.Add(newGameButton);
+                courseNameButton.Clicked += onNewGameCourseSelectionButtonClicked;
+                coursesLayout.Children.Add(courseNameButton);
             }
 
             AbsoluteLayout.SetLayoutBounds(roundInfoButton, new Rectangle(0.5, 0, 155, 50));
@@ -115,7 +115,7 @@ namespace GolfScorekeeper
             {
                 Children =
                 {
-                    newGameButton,
+                    scoreTrackerButton,
                     courseLookupButton
                 }
             };
@@ -199,7 +199,7 @@ namespace GolfScorekeeper
             
 
             MainPage = np;
-            newGameButton.Clicked += onNewGameButtonClicked;
+            scoreTrackerButton.Clicked += determineNewOrResumeGame;
             courseLookupButton.Clicked += onHistoryButtonClicked;
         }
 
@@ -212,43 +212,41 @@ namespace GolfScorekeeper
             }
             else
             {
-                currentCourseName = (sender as Button).Text;
-                //New game - assign values
-                currentHole = 1;
-                currentCourseScore = 0;
-                currentCourseScoreRelativeToPar = 0;
-                scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
-                furthestHole = 1;
-                midRound = true;
-                onNewGameCourseSelectionButtonClicked();
+                //Bring up course selection - it is a new game
+                await MainPage.Navigation.PushAsync(sp);
             }
         }
-        protected async void onNewGameButtonClicked(object sender, System.EventArgs e)
+        protected async void onNewGameCourseSelectionButtonClicked(object sender, System.EventArgs e)
         {
-            await MainPage.Navigation.PushAsync(sp);
-        }
-        protected async void onNewGameCourseSelectionButtonClicked()
-        {
-            roundInfoButton.Text = "H1 P" + Convert.ToString(courses.getHolePar(currentCourseName, 1));
-            overallButton.Text = "ovr: 0";
-            await MainPage.Navigation.PushAsync(ssp);
-        }
-        protected void onResumeGameQuestionButtonClicked(object sender, System.EventArgs e)
-        {
-            //Keep values
-            MainPage.Navigation.PushAsync(ssp);
-            MainPage.Navigation.RemovePage(qp);
-        }
-
-        protected void onNewGameQuestionButtonClicked(object sender, System.EventArgs e)
-        {
-            //Assign values
+            //New game - assign values
+            midRound = true;
+            strokes = 0;
             currentHole = 1;
             currentCourseScore = 0;
             currentCourseScoreRelativeToPar = 0;
             scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             furthestHole = 1;
-            MainPage.Navigation.PushAsync(ssp);
+            currentCourseName = (sender as Button).Text;
+
+            roundInfoButton.Text = "H" + Convert.ToString(currentHole)+ " P" + Convert.ToString(courses.getHolePar(currentCourseName, 1));
+            overallButton.Text = "ovr: " + Convert.ToString(currentCourseScoreRelativeToPar);
+            strokeButton.Text = Convert.ToString(strokes);
+
+            await MainPage.Navigation.PushAsync(ssp);
+            MainPage.Navigation.RemovePage(sp);
+        }
+        protected async void onResumeGameQuestionButtonClicked(object sender, System.EventArgs e)
+        {
+            //Keep values
+            roundInfoButton.Text = "H" + Convert.ToString(currentHole) + " P" + Convert.ToString(courses.getHolePar(currentCourseName, currentHole));
+            overallButton.Text = "ovr: " + currentCourseScoreRelativeToPar;
+            await MainPage.Navigation.PushAsync(ssp);
+            MainPage.Navigation.RemovePage(qp);
+        }
+
+        protected void onNewGameQuestionButtonClicked(object sender, System.EventArgs e)
+        {
+            MainPage.Navigation.PushAsync(sp);
             MainPage.Navigation.RemovePage(qp);
         }
 
@@ -278,6 +276,11 @@ namespace GolfScorekeeper
 
         protected void onNextHoleButtonClicked(object sender, System.EventArgs e)
         {
+            if (strokes == 0)
+            {
+                Toast.DisplayText("Enter a score for this hole");
+                return;
+            }
             scoreCard[currentHole - 1] = strokes;
             currentCourseScore = scoreCard.Sum();
             currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
@@ -294,7 +297,7 @@ namespace GolfScorekeeper
                 furthestHole += 1;
             }
             currentHole += 1;
-            
+
             UpdateButtonsNext();
         }
 
@@ -304,10 +307,19 @@ namespace GolfScorekeeper
             {
                 return;
             }
-            scoreCard[currentHole - 1] = strokes;
-            currentCourseScore = scoreCard.Sum();
-            currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
+            
+            if (strokes == 0)
+            {
+                Toast.DisplayText("Enter a score before returning to previous holes");
+                return;
+            }
+            if (strokes != 0) {
+                scoreCard[currentHole - 1] = strokes;
+                currentCourseScore = scoreCard.Sum();
+                currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
+            }
             currentHole -= 1;
+            
 
             UpdateButtonsPrevious();
         }
@@ -364,9 +376,19 @@ namespace GolfScorekeeper
             Label l = (Label) finalLayout.Children.First();
             l.Text = currentCourseName;
 
+            string relativeCourseScoreString;
+            if (currentCourseScoreRelativeToPar > 0)
+            {
+                relativeCourseScoreString = "+" + Convert.ToString(currentCourseScoreRelativeToPar);
+            }
+            else
+            {
+                relativeCourseScoreString = Convert.ToString(currentCourseScoreRelativeToPar);
+            }
+
             finalLayout.Children.Add(new Label
             {
-                Text = "Final Score: " + currentCourseScore + " | " + currentCourseScoreRelativeToPar
+                Text = "Final Score: " + currentCourseScore + " | " + relativeCourseScoreString
             });
 
             for (int i = 0; i < 18; i++)
@@ -378,7 +400,6 @@ namespace GolfScorekeeper
             }
             MainPage.BackgroundColor = Color.Yellow;
             MainPage.Navigation.PushAsync(fp);
-            MainPage.Navigation.RemovePage(sp);
             MainPage.Navigation.RemovePage(ssp);
             //Reset for the next round
             currentHole = 1;
