@@ -42,21 +42,25 @@ namespace GolfScorekeeper
         private int furthestHole;
         //If this is false, keep the players game data. Allow them to restart or resume if they have already begun a game (=1)
         private bool midRound = false;
+        private Color greenColor = Color.FromRgb(10, 80, 22);
+        private Color grayColor = Color.FromRgb(70, 70, 70);
+        private Color darkGreenColor = Color.FromRgb(0, 35, 0);
+        private Color sandColor = Color.FromRgb(218, 189, 129);
         public App()
         {
             courses = new Courses();
 
-            scoreTrackerButton = new Button() { Text = "Score Tracker" };
-            courseLookupButton = new Button() { Text = "Course Lookup" };
-            roundInfoButton = new Button() { Text = "" };
-            overallButton = new Button() { Text = "" };
-            Button addStrokeButton = new Button() { Text = "+1" };
-            strokeButton = new Button() { Text = "0" };
-            Button subtractStrokeButton = new Button() { Text = "-1" };
-            Button nextHoleButton = new Button() { Text = "Next Hole" };
-            Button previousHoleButton = new Button() { Text = "Prev Hole" };
-            Button resumeGameQuestionButton = new Button() { Text = "Resume Game" };
-            Button newGameQuestionButton = new Button() { Text = "New Round" };
+            scoreTrackerButton = new Button() { Text = "Score Tracker", FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label)), BackgroundColor = greenColor };
+            courseLookupButton = new Button() { Text = "Course Lookup", BackgroundColor = greenColor };
+            roundInfoButton = new Button() { Text = "", BackgroundColor = grayColor };
+            overallButton = new Button() { Text = "", BackgroundColor = grayColor };
+            Button addStrokeButton = new Button() { Text = "+1", FontSize = 20, BackgroundColor = greenColor };
+            strokeButton = new Button() { Text = "0", BackgroundColor = greenColor };
+            Button subtractStrokeButton = new Button() { Text = "-1", BackgroundColor = greenColor };
+            Button nextHoleButton = new Button() { Text = "Next\nHole", FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)), BackgroundColor = sandColor, TextColor = Color.Black };
+            Button previousHoleButton = new Button() { Text = "Prev\nHole", FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)), BackgroundColor = sandColor, TextColor = Color.Black };
+            Button resumeGameQuestionButton = new Button() { Text = "Resume Game", BackgroundColor = greenColor };
+            Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = greenColor };
             
 
             addStrokeButton.Clicked += onAddStrokeButtonClicked;
@@ -84,7 +88,8 @@ namespace GolfScorekeeper
             {
                 Button courseNameButton = new Button()
                 {
-                    Text = courseList[i]
+                    Text = courseList[i],
+                    BackgroundColor = greenColor
                 };
                 courseNameButton.Clicked += onNewGameCourseSelectionButtonClicked;
                 coursesLayout.Children.Add(courseNameButton);
@@ -99,7 +104,7 @@ namespace GolfScorekeeper
             AbsoluteLayout.SetLayoutBounds(addStrokeButton, new Rectangle(0.5, 0.75, 155, 120));
             AbsoluteLayout.SetLayoutFlags(addStrokeButton, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(strokeButton, new Rectangle(0.5, 0.363, 60, 60));
+            AbsoluteLayout.SetLayoutBounds(strokeButton, new Rectangle(0.5, 0.367, 80, 60));
             AbsoluteLayout.SetLayoutFlags(strokeButton, AbsoluteLayoutFlags.PositionProportional);
 
             AbsoluteLayout.SetLayoutBounds(subtractStrokeButton, new Rectangle(0.5, 1, 155, 58));
@@ -163,31 +168,36 @@ namespace GolfScorekeeper
 
             //MainPage
             mp = new CirclePage() {
-                Content = homePageLayout
+                Content = homePageLayout,
+                BackgroundColor = darkGreenColor
             };
 
             //SubPage
             sp = new CirclePage()
             {
-                Content = courseSelectionLayout
+                Content = courseSelectionLayout,
+                BackgroundColor = darkGreenColor
             };
 
             //SubSubPage
             ssp = new CirclePage()
             {
-                Content = parTrackerLayout
+                Content = parTrackerLayout,
+                BackgroundColor = darkGreenColor
             };
 
             //QuestionPage
             qp = new CirclePage() 
             { 
-                Content = questionLayout
+                Content = questionLayout,
+                BackgroundColor = darkGreenColor
             };
 
             //FinalPage (results screen)
             fp = new CirclePage()
             {
-                Content = finalScreenLayout
+                Content = finalScreenLayout,
+                BackgroundColor = darkGreenColor
             };
 
             NavigationPage np = new NavigationPage(mp);
