@@ -13,13 +13,19 @@ namespace GolfScorekeeper
     {
         private Button scoreTrackerButton;
         private Button courseLookupButton;
+        private Button aboutButton;
+        private Button sandAstheticButton1;
+        private Button sandAstheticButton2;
+        private Button waterAstheticButton1;
+        private Button waterAstheticButton2;
+        private Label hole;
         private NavigationPage np;
         private CirclePage mp;
         private CirclePage sp;
         private CirclePage ssp;
         private CirclePage fp;
         private CirclePage qp;
-        private CircleStackLayout homePageLayout;
+        private AbsoluteLayout homePageLayout;
         private CircleScrollView courseSelectionLayout;
         CircleScrollView finalScreenLayout;
         private Button roundInfoButton;
@@ -46,12 +52,20 @@ namespace GolfScorekeeper
         private Color grayColor = Color.FromRgb(70, 70, 70);
         private Color darkGreenColor = Color.FromRgb(0, 35, 0);
         private Color sandColor = Color.FromRgb(218, 189, 129);
+        private Color waterColor = Color.FromRgb(0, 64, 98);
         public App()
         {
             courses = new Courses();
 
-            scoreTrackerButton = new Button() { Text = "Score Tracker", FontSize = Device.GetNamedSize(NamedSize.Micro, typeof(Label)), BackgroundColor = greenColor };
+            scoreTrackerButton = new Button() { Text = "Score Tracker", BackgroundColor = greenColor };
             courseLookupButton = new Button() { Text = "Course Lookup", BackgroundColor = greenColor };
+            aboutButton = new Button() { Text = "About", FontSize = 4, BackgroundColor = greenColor };
+            sandAstheticButton1 = new Button() { Text = "", BackgroundColor = sandColor };
+            sandAstheticButton2 = new Button() { Text = "", BackgroundColor = sandColor };
+            waterAstheticButton1 = new Button() { Text = "", BackgroundColor = waterColor };
+            waterAstheticButton2 = new Button() { Text = "", BackgroundColor = waterColor };
+            hole = new Label() { Text = ".", TextColor = Color.Black };
+
             roundInfoButton = new Button() { Text = "", BackgroundColor = grayColor };
             overallButton = new Button() { Text = "", BackgroundColor = grayColor };
             Button addStrokeButton = new Button() { Text = "+1", FontSize = 20, BackgroundColor = greenColor };
@@ -62,7 +76,7 @@ namespace GolfScorekeeper
             Button resumeGameQuestionButton = new Button() { Text = "Resume Game", BackgroundColor = greenColor };
             Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = greenColor };
             
-
+            
             addStrokeButton.Clicked += onAddStrokeButtonClicked;
             strokeButton.Clicked += onStrokeButtonClicked;
             subtractStrokeButton.Clicked += onSubtractStrokeButtonClicked;
@@ -84,12 +98,22 @@ namespace GolfScorekeeper
 
             List<string> courseList = courses.getCourseList();
 
+            int courseNameFontSize = 0;
             for (int i = 0; i<courseList.Count(); i++)
             {
+                if (i == 0 || i == courseList.Count() - 1)
+                {
+                    courseNameFontSize = 8;
+                }
+                else
+                {
+                    courseNameFontSize = 10;
+                }
                 Button courseNameButton = new Button()
                 {
                     Text = courseList[i],
-                    BackgroundColor = greenColor
+                    BackgroundColor = greenColor,
+                    FontSize = courseNameFontSize
                 };
                 courseNameButton.Clicked += onNewGameCourseSelectionButtonClicked;
                 coursesLayout.Children.Add(courseNameButton);
@@ -116,12 +140,42 @@ namespace GolfScorekeeper
             AbsoluteLayout.SetLayoutBounds(previousHoleButton, new Rectangle(0, 0, 100, 360));
             AbsoluteLayout.SetLayoutFlags(previousHoleButton, AbsoluteLayoutFlags.PositionProportional);
 
-            homePageLayout = new CircleStackLayout
+            AbsoluteLayout.SetLayoutBounds(scoreTrackerButton, new Rectangle(0, 0.35, 200, 90));
+            AbsoluteLayout.SetLayoutFlags(scoreTrackerButton, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(courseLookupButton, new Rectangle(0, 0.65, 200, 70));
+            AbsoluteLayout.SetLayoutFlags(courseLookupButton, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(aboutButton, new Rectangle(0.8, 0.5, 80, 80));
+            AbsoluteLayout.SetLayoutFlags(aboutButton, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(sandAstheticButton1, new Rectangle(0.65, 0.3, 40, 40));
+            AbsoluteLayout.SetLayoutFlags(sandAstheticButton1, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(sandAstheticButton2, new Rectangle(0.8, 0.74, 80, 50));
+            AbsoluteLayout.SetLayoutFlags(sandAstheticButton2, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(waterAstheticButton1, new Rectangle(0.3, 0, 250, 80));
+            AbsoluteLayout.SetLayoutFlags(waterAstheticButton1, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(waterAstheticButton2, new Rectangle(0.2, 1, 200, 80));
+            AbsoluteLayout.SetLayoutFlags(waterAstheticButton2, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(hole, new Rectangle(0.8, .4, 30, 30));
+            AbsoluteLayout.SetLayoutFlags(hole, AbsoluteLayoutFlags.PositionProportional);
+
+            homePageLayout = new AbsoluteLayout
             {
                 Children =
                 {
                     scoreTrackerButton,
-                    courseLookupButton
+                    courseLookupButton,
+                    aboutButton,
+                    sandAstheticButton1,
+                    sandAstheticButton2,
+                    waterAstheticButton1,
+                    waterAstheticButton2,
+                    hole
                 }
             };
 
@@ -370,7 +424,6 @@ namespace GolfScorekeeper
 
         public void FinishRound()
         {
-            //Todo: remove child labels from previous game every time the player plays a round
             finalLayout = new StackLayout
             {
                 HorizontalOptions = LayoutOptions.Center,
@@ -383,8 +436,13 @@ namespace GolfScorekeeper
                     }
             };
             finalScreenLayout.Content = finalLayout;
-            Label l = (Label) finalLayout.Children.First();
-            l.Text = currentCourseName;
+
+            finalLayout.Children.Add(new Label
+            {
+                Text = currentCourseName,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center
+            });
 
             string relativeCourseScoreString;
             if (currentCourseScoreRelativeToPar > 0)
@@ -398,15 +456,33 @@ namespace GolfScorekeeper
 
             finalLayout.Children.Add(new Label
             {
-                Text = "Final Score: " + currentCourseScore + " | " + relativeCourseScoreString
+                Text = "Final Score: " + currentCourseScore,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center
+            });
+
+            finalLayout.Children.Add(new Label
+            {
+                Text = "Overall: " + relativeCourseScoreString,
+                HorizontalOptions = LayoutOptions.Center,
+                HorizontalTextAlignment = TextAlignment.Center
             });
 
             for (int i = 0; i < 18; i++)
             {
                 finalLayout.Children.Add(new Label
                 {
-                    Text = Convert.ToString(i+1) + ": " + courses.getHolePar(currentCourseName, i + 1) + " | " + scoreCard[i]
+                    Text = "Hole " + Convert.ToString(i+1) + " (" + courses.getHolePar(currentCourseName, i + 1) + "): " + scoreCard[i],
+                    HorizontalOptions = LayoutOptions.Center,
+                    HorizontalTextAlignment = TextAlignment.Center
                 });
+                if (i == 17)
+                {
+                    finalLayout.Children.Add(new Label
+                    {
+                        Text = ""
+                    });
+                }
             }
             MainPage.BackgroundColor = Color.Yellow;
             MainPage.Navigation.PushAsync(fp);
