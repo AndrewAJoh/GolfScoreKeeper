@@ -62,7 +62,14 @@ namespace GolfScorekeeper
 
         public void AddNewCourse(string courseName, int[] parList)
         {
-            courses.Add(courseName, parList);
+            if (!courses.ContainsKey(courseName) )
+            {   
+                courses.Add(courseName, parList);
+            }
+            else
+            {
+                courses[courseName] = parList;
+            }
         }
 
     }

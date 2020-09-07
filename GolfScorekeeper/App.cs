@@ -6,6 +6,7 @@ using System.Text;
 using Xamarin.Forms;
 using Tizen.Wearable.CircularUI.Forms;
 using Tizen.NUI.BaseComponents;
+using System.Text.RegularExpressions;
 
 namespace GolfScorekeeper
 {
@@ -31,7 +32,9 @@ namespace GolfScorekeeper
         private CirclePage fp;
         private CirclePage qp;
         private CirclePage ep;
+        private CirclePage clp;
         private AbsoluteLayout homePageLayout;
+        private StackLayout coursesLayout;
         private AbsoluteLayout enterPageLayout;
         private CircleScrollView courseSelectionLayout;
         CircleScrollView finalScreenLayout;
@@ -39,6 +42,7 @@ namespace GolfScorekeeper
         private Button overallButton;
         private Button strokeButton;
         private StackLayout finalLayout;
+        private List<string> courseList;
         //Current number of strokes for a single hole
         private int strokes;
         //Current course being played (after selecting new game)
@@ -81,7 +85,7 @@ namespace GolfScorekeeper
             Button subtractStrokeButton = new Button() { Text = "-1", BackgroundColor = greenColor };
             Button nextHoleButton = new Button() { Text = "Next\nHole", FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)), BackgroundColor = sandColor, TextColor = Color.Black };
             Button previousHoleButton = new Button() { Text = "Prev\nHole", FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)), BackgroundColor = sandColor, TextColor = Color.Black };
-            Button resumeGameQuestionButton = new Button() { Text = "Resume Game", BackgroundColor = greenColor };
+            Button resumeGameQuestionButton = new Button() { Text = "Resume Game", FontSize = 8, BackgroundColor = greenColor };
             Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = greenColor };
             
             
@@ -96,7 +100,7 @@ namespace GolfScorekeeper
             waterAstheticButton1.Clicked += OnWaterAstheticButtonClicked;
             waterAstheticButton2.Clicked += OnWaterAstheticButtonClicked;
 
-            StackLayout coursesLayout = new CircleStackLayout{};
+            
 
             StackLayout questionCircleStackLayout = new CircleStackLayout 
             {
@@ -106,29 +110,6 @@ namespace GolfScorekeeper
                     newGameQuestionButton
                 }
             };
-
-            List<string> courseList = courses.GetCourseList();
-
-            int courseNameFontSize = 0;
-            for (int i = 0; i<courseList.Count(); i++)
-            {
-                if (i == 0 || i == courseList.Count() - 1)
-                {
-                    courseNameFontSize = 8;
-                }
-                else
-                {
-                    courseNameFontSize = 10;
-                }
-                Button courseNameButton = new Button()
-                {
-                    Text = courseList[i],
-                    BackgroundColor = greenColor,
-                    FontSize = courseNameFontSize
-                };
-                courseNameButton.Clicked += EvaluateCustomOrStandardGame;
-                coursesLayout.Children.Add(courseNameButton);
-            }
 
             AbsoluteLayout.SetLayoutBounds(roundInfoButton, new Rectangle(0.5, 0, 155, 50));
             AbsoluteLayout.SetLayoutFlags(roundInfoButton, AbsoluteLayoutFlags.PositionProportional);
@@ -190,10 +171,7 @@ namespace GolfScorekeeper
                 }
             };
 
-            courseSelectionLayout = new CircleScrollView
-            {
-                Content = coursesLayout
-            };
+            courseSelectionLayout = new CircleScrollView { };
 
             CircleScrollView questionLayout = new CircleScrollView
             {
@@ -231,11 +209,6 @@ namespace GolfScorekeeper
                 Content = finalLayout
             };
 
-
-            
-
-
-
             //MainPage
             mp = new CirclePage() {
                 Content = homePageLayout,
@@ -245,7 +218,6 @@ namespace GolfScorekeeper
             //SubPage
             sp = new CirclePage()
             {
-                Content = courseSelectionLayout,
                 BackgroundColor = darkGreenColor
             };
 
@@ -269,6 +241,11 @@ namespace GolfScorekeeper
                 BackgroundColor = darkGreenColor
             };
 
+            //CourseListPage
+            clp = new CirclePage()
+            {
+                BackgroundColor = darkGreenColor
+            };
 
             //FinalPage (results screen)
             fp = new CirclePage()
@@ -284,16 +261,18 @@ namespace GolfScorekeeper
             NavigationPage.SetHasNavigationBar(qp, false);
             NavigationPage.SetHasNavigationBar(ep, false);
             NavigationPage.SetHasNavigationBar(fp, false);
-            
+            NavigationPage.SetHasNavigationBar(clp, false);
+
             MainPage = np;
             scoreTrackerButton.Clicked += DetermineNewOrResumeGame;
-            courseLookupButton.Clicked += OnHistoryButtonClicked;
+            courseLookupButton.Clicked += OnCourseListButtonClicked;
         }
         protected void GoToNamePrompt(object sender, System.EventArgs e)
         {
             nineOrEighteen = Convert.ToInt32((sender as Button).Text);
             customCoursePrompt.Text = "Enter course name:";
             customCourseEntry.Keyboard = Keyboard.Text;
+            customCourseEntry.MaxLength = 25;
             enterPageLayout.Children.Remove(customNineButton);
             enterPageLayout.Children.Remove(customEighteenButton);
             enterPageLayout.Children.Add(customCourseEntry);
@@ -303,6 +282,14 @@ namespace GolfScorekeeper
         {
             if (customCourseNextButton.Text == "Next")
             {
+                var courseNameRegex = new Regex(@"^[a-zA-Z\s]*$");
+
+                if (!courseNameRegex.IsMatch(customCourseEntry.Text))
+                {
+                    Toast.DisplayText("Only letters and spaces are allowed.");
+                    return;
+                }
+
                 customCourseNextButton.Text = "Start";
                 currentCourseName = customCourseEntry.Text;
                 customCourseEntry.Text = "";
@@ -313,6 +300,19 @@ namespace GolfScorekeeper
             else if (customCourseNextButton.Text == "Start")
             {
                 string pars = customCourseEntry.Text;
+                if (pars.Length != nineOrEighteen)
+                {
+                    Toast.DisplayText("You must have " + nineOrEighteen + " pars in the entry. Follow the example for formatting.");
+                    return;
+                }
+
+                var parRegex = new Regex("^[1-9]*$");
+
+                if (!parRegex.IsMatch(pars)) 
+                {
+                    Toast.DisplayText("0s and symbols are not allowed.");
+                    return;
+                }
                 //TODO: Add checking of entry
                 //Add course to list of courses
                 List<int> customCourseParList = new List<int>();
@@ -329,17 +329,20 @@ namespace GolfScorekeeper
             }
         }
 
-        protected async void DetermineNewOrResumeGame(object sender, System.EventArgs e)
+        protected void DetermineNewOrResumeGame(object sender, System.EventArgs e)
         {
             if (midRound)
             {
                 //Ask player whether they want to resume or start new
-                await MainPage.Navigation.PushAsync(qp);
+                MainPage.Navigation.PushAsync(qp);
             }
             else
             {
                 //Bring up course selection - it is a new game
-                await MainPage.Navigation.PushAsync(sp);
+                GenerateCourseList(false);
+
+
+                MainPage.Navigation.PushAsync(sp);
             }
         }
         protected void EvaluateCustomOrStandardGame(object sender, System.EventArgs e)
@@ -361,7 +364,7 @@ namespace GolfScorekeeper
             //initiate values
             customCoursePrompt = new Label { Text = "9 or 18 holes:" };
             customCourseEntry = new Entry() { };
-            customCourseNextButton = new Button() { Text = "Next" };
+            customCourseNextButton = new Button() { Text = "Next"};
             customNineButton = new Button() { Text = "9" };
             customEighteenButton = new Button() { Text = "18" };
 
@@ -379,7 +382,7 @@ namespace GolfScorekeeper
             AbsoluteLayout.SetLayoutFlags(customCoursePrompt, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(customCourseEntry, new Rectangle(0.5, 0.7, 300, 60));
             AbsoluteLayout.SetLayoutFlags(customCourseEntry, AbsoluteLayoutFlags.PositionProportional);
-            AbsoluteLayout.SetLayoutBounds(customCourseNextButton, new Rectangle(0.5, 0.95, 100, 60));
+            AbsoluteLayout.SetLayoutBounds(customCourseNextButton, new Rectangle(0.5, 0.95, 110, 60));
             AbsoluteLayout.SetLayoutFlags(customCourseNextButton, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(customNineButton, new Rectangle(0.2, 0.6, 100, 60));
             AbsoluteLayout.SetLayoutFlags(customNineButton, AbsoluteLayoutFlags.PositionProportional);
@@ -455,9 +458,53 @@ namespace GolfScorekeeper
             strokeButton.Text = Convert.ToString(strokes);
         }
 
-        protected void OnHistoryButtonClicked(object sender, System.EventArgs e)
+        protected void OnCourseListButtonClicked(object sender, System.EventArgs e)
         {
-            courseLookupButton.Text = "clicked";
+            GenerateCourseList(true);
+
+
+            MainPage.Navigation.PushAsync(clp);
+
+        }
+
+        protected void GenerateCourseList(bool courseLookupPage)
+        {
+            coursesLayout = new CircleStackLayout { };
+            courseSelectionLayout = new CircleScrollView
+            {
+                Content = coursesLayout
+            };
+            if (courseLookupPage) {
+                clp.Content = courseSelectionLayout;
+            }
+            else
+            {
+                sp.Content = courseSelectionLayout;
+            }
+
+            courseList = courses.GetCourseList();
+
+            int courseNameFontSize = 0;
+            int startingIterator = courseLookupPage ? 1 : 0;
+            for (int i = startingIterator; i < courseList.Count(); i++)
+            {
+                if (i == startingIterator || i == courseList.Count() - 1)
+                {
+                    courseNameFontSize = 8;
+                }
+                else
+                {
+                    courseNameFontSize = 10;
+                }
+                Button courseNameButton = new Button()
+                {
+                    Text = courseList[i],
+                    BackgroundColor = greenColor,
+                    FontSize = courseNameFontSize
+                };
+                courseNameButton.Clicked += EvaluateCustomOrStandardGame;
+                coursesLayout.Children.Add(courseNameButton);
+            }
         }
 
         protected void OnNextHoleButtonClicked(object sender, System.EventArgs e)
