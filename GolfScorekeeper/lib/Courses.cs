@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -9,32 +10,42 @@ namespace GolfScorekeeper
     {
         private Dictionary<string, int[]> courses = new Dictionary<string, int[]>()
         {
-            { "Custom", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
+            { "Custom 18 holes", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
+            { "Custom 9 holes", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
+            { "Bunker Hills East", new int[] {4, 4, 3, 5, 4, 5, 3, 4, 4} },
+            { "Bunker Hills North", new int[] {4, 4, 4, 5, 4, 3, 4, 3, 5} },
+            { "Bunker Hills West", new int[] {4, 5, 3, 4, 5, 4, 4, 3, 4} },
             { "Eagle Valley", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
             { "Hiawatha", new int[] {5, 5, 3, 4, 4, 4, 5, 3, 4, 5, 4, 3, 5, 4, 3, 4, 4, 4} }
         };
 
-        public int getCoursePar(string courseName)
+        public int GetNineOrEighteen(string courseName)
         {
+            return courses[courseName].Length;
+        }
+        
+        public int GetCoursePar(string courseName)
+        {
+            int holeCount = GetNineOrEighteen(courseName);
             int par = 0;
-            for (int i=0; i < 18; i++)
+            for (int i=0; i < holeCount; i++)
             {
                 par += courses[courseName][i];
             }
             return par;
         }
 
-        public int getHolePar(string courseName, int holeNumber)
+        public int GetHolePar(string courseName, int holeNumber)
         {
             return courses[courseName][holeNumber-1];
         }
         //Unused
-        public int getCourseCount()
+        public int GetCourseCount()
         {
             return courses.Count;
         }
 
-        public List<string> getCourseList()
+        public List<string> GetCourseList()
         {
             return new List<string>(courses.Keys);
         }
@@ -44,7 +55,7 @@ namespace GolfScorekeeper
             int totalPar = 0;
             for (int i=1; i <= holeNumber; i++)
             {
-                totalPar += getHolePar(courseName, i);
+                totalPar += GetHolePar(courseName, i);
             }
 
             return currentScore - totalPar;

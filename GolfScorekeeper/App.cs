@@ -48,6 +48,7 @@ namespace GolfScorekeeper
         private int furthestHole;
         //If this is false, keep the players game data. Allow them to restart or resume if they have already begun a game (=1)
         private bool midRound = false;
+        private int nineOrEighteen;
         private Color greenColor = Color.FromRgb(10, 80, 22);
         private Color grayColor = Color.FromRgb(70, 70, 70);
         private Color darkGreenColor = Color.FromRgb(0, 35, 0);
@@ -84,6 +85,9 @@ namespace GolfScorekeeper
             previousHoleButton.Clicked += onPreviousHoleButtonClicked;
             resumeGameQuestionButton.Clicked += onResumeGameQuestionButtonClicked;
             newGameQuestionButton.Clicked += onNewGameQuestionButtonClicked;
+            aboutButton.Clicked += onAboutButtonClicked;
+            waterAstheticButton1.Clicked += onWaterAstheticButtonClicked;
+            waterAstheticButton2.Clicked += onWaterAstheticButtonClicked;
 
             StackLayout coursesLayout = new CircleStackLayout{};
 
@@ -96,7 +100,7 @@ namespace GolfScorekeeper
                 }
             };
 
-            List<string> courseList = courses.getCourseList();
+            List<string> courseList = courses.GetCourseList();
 
             int courseNameFontSize = 0;
             for (int i = 0; i<courseList.Count(); i++)
@@ -288,11 +292,19 @@ namespace GolfScorekeeper
             currentHole = 1;
             currentCourseScore = 0;
             currentCourseScoreRelativeToPar = 0;
-            scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             furthestHole = 1;
             currentCourseName = (sender as Button).Text;
+            nineOrEighteen = courses.GetNineOrEighteen(currentCourseName);
+            if (nineOrEighteen == 18)
+            {
+                scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            }
+            else
+            {
+                scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            }
 
-            roundInfoButton.Text = "H" + Convert.ToString(currentHole)+ " P" + Convert.ToString(courses.getHolePar(currentCourseName, 1));
+            roundInfoButton.Text = "H" + Convert.ToString(currentHole)+ " P" + Convert.ToString(courses.GetHolePar(currentCourseName, 1));
             overallButton.Text = "ovr: " + Convert.ToString(currentCourseScoreRelativeToPar);
             strokeButton.Text = Convert.ToString(strokes);
 
@@ -302,7 +314,7 @@ namespace GolfScorekeeper
         protected async void onResumeGameQuestionButtonClicked(object sender, System.EventArgs e)
         {
             //Keep values
-            roundInfoButton.Text = "H" + Convert.ToString(currentHole) + " P" + Convert.ToString(courses.getHolePar(currentCourseName, currentHole));
+            roundInfoButton.Text = "H" + Convert.ToString(currentHole) + " P" + Convert.ToString(courses.GetHolePar(currentCourseName, currentHole));
             overallButton.Text = "ovr: " + currentCourseScoreRelativeToPar;
             await MainPage.Navigation.PushAsync(ssp);
             MainPage.Navigation.RemovePage(qp);
@@ -349,7 +361,12 @@ namespace GolfScorekeeper
             currentCourseScore = scoreCard.Sum();
             currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
 
-            if (currentHole == 18)
+            if (currentHole == 18 && nineOrEighteen == 18)
+            {
+                FinishRound();
+                return;
+            }
+            else if (currentHole == 9 && nineOrEighteen == 9)
             {
                 FinishRound();
                 return;
@@ -399,7 +416,7 @@ namespace GolfScorekeeper
             {
                 relativeCourseScoreString = Convert.ToString(currentCourseScoreRelativeToPar);
             }
-            roundInfoButton.Text = "H" + currentHole + " P" + Convert.ToString(courses.getHolePar(currentCourseName, currentHole));
+            roundInfoButton.Text = "H" + currentHole + " P" + Convert.ToString(courses.GetHolePar(currentCourseName, currentHole));
             overallButton.Text = "ovr: " + relativeCourseScoreString;
             strokes = scoreCard[currentHole - 1];
             strokeButton.Text = Convert.ToString(strokes);
@@ -416,7 +433,7 @@ namespace GolfScorekeeper
             {
                 relativeCourseScoreString = Convert.ToString(currentCourseScoreRelativeToPar);
             }
-            roundInfoButton.Text = "H" + currentHole + " P" + Convert.ToString(courses.getHolePar(currentCourseName, currentHole));
+            roundInfoButton.Text = "H" + currentHole + " P" + Convert.ToString(courses.GetHolePar(currentCourseName, currentHole));
             overallButton.Text = "ovr: " + relativeCourseScoreString;
             strokes = scoreCard[currentHole - 1];
             strokeButton.Text = Convert.ToString(strokes);
@@ -468,15 +485,22 @@ namespace GolfScorekeeper
                 HorizontalTextAlignment = TextAlignment.Center
             });
 
-            for (int i = 0; i < 18; i++)
+            for (int i = 0; i < nineOrEighteen; i++)
             {
                 finalLayout.Children.Add(new Label
                 {
-                    Text = "Hole " + Convert.ToString(i+1) + " (" + courses.getHolePar(currentCourseName, i + 1) + "): " + scoreCard[i],
+                    Text = "Hole " + Convert.ToString(i+1) + " (" + courses.GetHolePar(currentCourseName, i + 1) + "): " + scoreCard[i],
                     HorizontalOptions = LayoutOptions.Center,
                     HorizontalTextAlignment = TextAlignment.Center
                 });
-                if (i == 17)
+                if (i == 17 && nineOrEighteen == 18)
+                {
+                    finalLayout.Children.Add(new Label
+                    {
+                        Text = ""
+                    });
+                }
+                else if (i == 8 && nineOrEighteen == 9)
                 {
                     finalLayout.Children.Add(new Label
                     {
@@ -488,6 +512,7 @@ namespace GolfScorekeeper
             MainPage.Navigation.PushAsync(fp);
             MainPage.Navigation.RemovePage(ssp);
             //Reset for the next round
+            /*
             currentHole = 1;
             furthestHole = 1;
             currentCourseScore = 0;
@@ -496,8 +521,19 @@ namespace GolfScorekeeper
             {
                 scoreCard[i] = 0;
             }
-            midRound = false;
             currentCourseName = "";
+            */
+            midRound = false;
+        }
+
+        protected void onAboutButtonClicked(object sender, System.EventArgs e)
+        {
+            Toast.DisplayText("Andrew Johnson         github.com/AndrewAJoh");
+        }
+
+        protected void onWaterAstheticButtonClicked(object sender, System.EventArgs e)
+        {
+            Toast.DisplayText("Splash!");
         }
 
         protected override void OnStart()
