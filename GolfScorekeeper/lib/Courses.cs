@@ -10,8 +10,7 @@ namespace GolfScorekeeper
     {
         private Dictionary<string, int[]> courses = new Dictionary<string, int[]>()
         {
-            { "Custom 18 holes", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
-            { "Custom 9 holes", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
+            { "Custom Round", new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
             { "Bunker Hills East", new int[] {4, 4, 3, 5, 4, 5, 3, 4, 4} },
             { "Bunker Hills North", new int[] {4, 4, 4, 5, 4, 3, 4, 3, 5} },
             { "Bunker Hills West", new int[] {4, 5, 3, 4, 5, 4, 4, 3, 4} },
@@ -59,6 +58,11 @@ namespace GolfScorekeeper
             }
 
             return currentScore - totalPar;
+        }
+
+        public void AddNewCourse(string courseName, int[] parList)
+        {
+            courses.Add(courseName, parList);
         }
 
     }

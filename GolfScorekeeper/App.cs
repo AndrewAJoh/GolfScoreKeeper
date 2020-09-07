@@ -19,13 +19,20 @@ namespace GolfScorekeeper
         private Button waterAstheticButton1;
         private Button waterAstheticButton2;
         private Label hole;
+        private Label customCoursePrompt;
+        private Entry customCourseEntry;
+        private Button customCourseNextButton;
+        private Button customNineButton;
+        private Button customEighteenButton;
         private NavigationPage np;
         private CirclePage mp;
         private CirclePage sp;
         private CirclePage ssp;
         private CirclePage fp;
         private CirclePage qp;
+        private CirclePage ep;
         private AbsoluteLayout homePageLayout;
+        private AbsoluteLayout enterPageLayout;
         private CircleScrollView courseSelectionLayout;
         CircleScrollView finalScreenLayout;
         private Button roundInfoButton;
@@ -78,16 +85,16 @@ namespace GolfScorekeeper
             Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = greenColor };
             
             
-            addStrokeButton.Clicked += onAddStrokeButtonClicked;
-            strokeButton.Clicked += onStrokeButtonClicked;
-            subtractStrokeButton.Clicked += onSubtractStrokeButtonClicked;
-            nextHoleButton.Clicked += onNextHoleButtonClicked;
-            previousHoleButton.Clicked += onPreviousHoleButtonClicked;
-            resumeGameQuestionButton.Clicked += onResumeGameQuestionButtonClicked;
-            newGameQuestionButton.Clicked += onNewGameQuestionButtonClicked;
-            aboutButton.Clicked += onAboutButtonClicked;
-            waterAstheticButton1.Clicked += onWaterAstheticButtonClicked;
-            waterAstheticButton2.Clicked += onWaterAstheticButtonClicked;
+            addStrokeButton.Clicked += OnAddStrokeButtonClicked;
+            strokeButton.Clicked += OnStrokeButtonClicked;
+            subtractStrokeButton.Clicked += OnSubtractStrokeButtonClicked;
+            nextHoleButton.Clicked += OnNextHoleButtonClicked;
+            previousHoleButton.Clicked += OnPreviousHoleButtonClicked;
+            resumeGameQuestionButton.Clicked += OnResumeGameQuestionButtonClicked;
+            newGameQuestionButton.Clicked += OnNewGameQuestionButtonClicked;
+            aboutButton.Clicked += OnAboutButtonClicked;
+            waterAstheticButton1.Clicked += OnWaterAstheticButtonClicked;
+            waterAstheticButton2.Clicked += OnWaterAstheticButtonClicked;
 
             StackLayout coursesLayout = new CircleStackLayout{};
 
@@ -119,7 +126,7 @@ namespace GolfScorekeeper
                     BackgroundColor = greenColor,
                     FontSize = courseNameFontSize
                 };
-                courseNameButton.Clicked += onNewGameCourseSelectionButtonClicked;
+                courseNameButton.Clicked += EvaluateCustomOrStandardGame;
                 coursesLayout.Children.Add(courseNameButton);
             }
 
@@ -224,6 +231,11 @@ namespace GolfScorekeeper
                 Content = finalLayout
             };
 
+
+            
+
+
+
             //MainPage
             mp = new CirclePage() {
                 Content = homePageLayout,
@@ -251,6 +263,13 @@ namespace GolfScorekeeper
                 BackgroundColor = darkGreenColor
             };
 
+            //EnterPage
+            ep = new CirclePage()
+            {
+                BackgroundColor = darkGreenColor
+            };
+
+
             //FinalPage (results screen)
             fp = new CirclePage()
             {
@@ -263,15 +282,54 @@ namespace GolfScorekeeper
             NavigationPage.SetHasNavigationBar(sp, false);
             NavigationPage.SetHasNavigationBar(ssp, false);
             NavigationPage.SetHasNavigationBar(qp, false);
+            NavigationPage.SetHasNavigationBar(ep, false);
             NavigationPage.SetHasNavigationBar(fp, false);
             
-
             MainPage = np;
-            scoreTrackerButton.Clicked += determineNewOrResumeGame;
-            courseLookupButton.Clicked += onHistoryButtonClicked;
+            scoreTrackerButton.Clicked += DetermineNewOrResumeGame;
+            courseLookupButton.Clicked += OnHistoryButtonClicked;
+        }
+        protected void GoToNamePrompt(object sender, System.EventArgs e)
+        {
+            nineOrEighteen = Convert.ToInt32((sender as Button).Text);
+            customCoursePrompt.Text = "Enter course name:";
+            customCourseEntry.Keyboard = Keyboard.Text;
+            enterPageLayout.Children.Remove(customNineButton);
+            enterPageLayout.Children.Remove(customEighteenButton);
+            enterPageLayout.Children.Add(customCourseEntry);
+            enterPageLayout.Children.Add(customCourseNextButton);
+        }
+        protected void GoToParPrompt(object sender, System.EventArgs e)
+        {
+            if (customCourseNextButton.Text == "Next")
+            {
+                customCourseNextButton.Text = "Start";
+                currentCourseName = customCourseEntry.Text;
+                customCourseEntry.Text = "";
+                customCourseEntry.Keyboard = Keyboard.Numeric;
+                customCourseEntry.MaxLength = nineOrEighteen;
+                customCoursePrompt.Text = "Enter course pars in order (Example: 443545344)";
+            }
+            else if (customCourseNextButton.Text == "Start")
+            {
+                string pars = customCourseEntry.Text;
+                //TODO: Add checking of entry
+                //Add course to list of courses
+                List<int> customCourseParList = new List<int>();
+                for (int i = 0; i < nineOrEighteen; i++)
+                {
+                    customCourseParList.Add(Convert.ToInt32(pars[i].ToString()));
+                }
+
+                int[] customCourseParListIntArray = customCourseParList.ToArray();
+                courses.AddNewCourse(currentCourseName, customCourseParListIntArray);
+
+                NewGame(currentCourseName);
+                MainPage.Navigation.RemovePage(ep);
+            }
         }
 
-        protected async void determineNewOrResumeGame(object sender, System.EventArgs e)
+        protected async void DetermineNewOrResumeGame(object sender, System.EventArgs e)
         {
             if (midRound)
             {
@@ -284,7 +342,60 @@ namespace GolfScorekeeper
                 await MainPage.Navigation.PushAsync(sp);
             }
         }
-        protected async void onNewGameCourseSelectionButtonClicked(object sender, System.EventArgs e)
+        protected void EvaluateCustomOrStandardGame(object sender, System.EventArgs e)
+        {
+            string courseName = (sender as Button).Text;
+            if (courseName == "Custom Round")
+            {
+                NewCustomGame();
+            }
+            else
+            {
+                nineOrEighteen = courses.GetNineOrEighteen(courseName);
+                NewGame(courseName);
+            }
+        }
+
+        protected async void NewCustomGame()
+        {
+            //initiate values
+            customCoursePrompt = new Label { Text = "9 or 18 holes:" };
+            customCourseEntry = new Entry() { };
+            customCourseNextButton = new Button() { Text = "Next" };
+            customNineButton = new Button() { Text = "9" };
+            customEighteenButton = new Button() { Text = "18" };
+
+            enterPageLayout = new AbsoluteLayout()
+            {
+                Children =
+                {
+                    customCoursePrompt,
+                    customNineButton,
+                    customEighteenButton
+                }
+            };
+
+            AbsoluteLayout.SetLayoutBounds(customCoursePrompt, new Rectangle(0.5, 0.5, 300, 200));
+            AbsoluteLayout.SetLayoutFlags(customCoursePrompt, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(customCourseEntry, new Rectangle(0.5, 0.7, 300, 60));
+            AbsoluteLayout.SetLayoutFlags(customCourseEntry, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(customCourseNextButton, new Rectangle(0.5, 0.95, 100, 60));
+            AbsoluteLayout.SetLayoutFlags(customCourseNextButton, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(customNineButton, new Rectangle(0.2, 0.6, 100, 60));
+            AbsoluteLayout.SetLayoutFlags(customNineButton, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(customEighteenButton, new Rectangle(0.8, 0.6, 100, 60));
+            AbsoluteLayout.SetLayoutFlags(customEighteenButton, AbsoluteLayoutFlags.PositionProportional);
+
+            customCourseNextButton.Clicked += GoToParPrompt;
+            customNineButton.Clicked += GoToNamePrompt;
+            customEighteenButton.Clicked += GoToNamePrompt;
+
+            ep.Content = enterPageLayout;
+
+            await MainPage.Navigation.PushAsync(ep);
+        }
+
+        protected async void NewGame(string courseName)
         {
             //New game - assign values
             midRound = true;
@@ -293,8 +404,7 @@ namespace GolfScorekeeper
             currentCourseScore = 0;
             currentCourseScoreRelativeToPar = 0;
             furthestHole = 1;
-            currentCourseName = (sender as Button).Text;
-            nineOrEighteen = courses.GetNineOrEighteen(currentCourseName);
+            currentCourseName = courseName;
             if (nineOrEighteen == 18)
             {
                 scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
@@ -311,7 +421,7 @@ namespace GolfScorekeeper
             await MainPage.Navigation.PushAsync(ssp);
             MainPage.Navigation.RemovePage(sp);
         }
-        protected async void onResumeGameQuestionButtonClicked(object sender, System.EventArgs e)
+        protected async void OnResumeGameQuestionButtonClicked(object sender, System.EventArgs e)
         {
             //Keep values
             roundInfoButton.Text = "H" + Convert.ToString(currentHole) + " P" + Convert.ToString(courses.GetHolePar(currentCourseName, currentHole));
@@ -320,22 +430,22 @@ namespace GolfScorekeeper
             MainPage.Navigation.RemovePage(qp);
         }
 
-        protected void onNewGameQuestionButtonClicked(object sender, System.EventArgs e)
+        protected void OnNewGameQuestionButtonClicked(object sender, System.EventArgs e)
         {
             MainPage.Navigation.PushAsync(sp);
             MainPage.Navigation.RemovePage(qp);
         }
 
-        protected void onAddStrokeButtonClicked(object sender, System.EventArgs e)
+        protected void OnAddStrokeButtonClicked(object sender, System.EventArgs e)
         {
             strokes += 1;
             strokeButton.Text = Convert.ToString(strokes);
         }
-        protected void onStrokeButtonClicked(object sender, System.EventArgs e)
+        protected void OnStrokeButtonClicked(object sender, System.EventArgs e)
         {
             //For now do nothing, possibly add a prompt to tell the user to select amount
         }
-        protected void onSubtractStrokeButtonClicked(object sender, System.EventArgs e)
+        protected void OnSubtractStrokeButtonClicked(object sender, System.EventArgs e)
         {
             if (strokes == 0)
             {
@@ -345,12 +455,12 @@ namespace GolfScorekeeper
             strokeButton.Text = Convert.ToString(strokes);
         }
 
-        protected void onHistoryButtonClicked(object sender, System.EventArgs e)
+        protected void OnHistoryButtonClicked(object sender, System.EventArgs e)
         {
             courseLookupButton.Text = "clicked";
         }
 
-        protected void onNextHoleButtonClicked(object sender, System.EventArgs e)
+        protected void OnNextHoleButtonClicked(object sender, System.EventArgs e)
         {
             if (strokes == 0)
             {
@@ -382,7 +492,7 @@ namespace GolfScorekeeper
             UpdateButtonsNext();
         }
 
-        protected void onPreviousHoleButtonClicked(object sender, System.EventArgs e)
+        protected void OnPreviousHoleButtonClicked(object sender, System.EventArgs e)
         {
             if (currentHole == 1)
             {
@@ -511,27 +621,15 @@ namespace GolfScorekeeper
             MainPage.BackgroundColor = Color.Yellow;
             MainPage.Navigation.PushAsync(fp);
             MainPage.Navigation.RemovePage(ssp);
-            //Reset for the next round
-            /*
-            currentHole = 1;
-            furthestHole = 1;
-            currentCourseScore = 0;
-            currentCourseScoreRelativeToPar = 0;
-            for (int i = 0; i < 18; i++)
-            {
-                scoreCard[i] = 0;
-            }
-            currentCourseName = "";
-            */
             midRound = false;
         }
 
-        protected void onAboutButtonClicked(object sender, System.EventArgs e)
+        protected void OnAboutButtonClicked(object sender, System.EventArgs e)
         {
             Toast.DisplayText("Andrew Johnson         github.com/AndrewAJoh");
         }
 
-        protected void onWaterAstheticButtonClicked(object sender, System.EventArgs e)
+        protected void OnWaterAstheticButtonClicked(object sender, System.EventArgs e)
         {
             Toast.DisplayText("Splash!");
         }
