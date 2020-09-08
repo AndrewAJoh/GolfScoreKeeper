@@ -33,15 +33,18 @@ namespace GolfScorekeeper
         private CirclePage qp;
         private CirclePage ep;
         private CirclePage clp;
+        private CirclePage cdp;
         private AbsoluteLayout homePageLayout;
         private StackLayout coursesLayout;
         private AbsoluteLayout enterPageLayout;
+        private AbsoluteLayout courseDetailLayout;
         private CircleScrollView courseSelectionLayout;
         CircleScrollView finalScreenLayout;
         private Button roundInfoButton;
         private Button overallButton;
         private Button strokeButton;
         private StackLayout finalLayout;
+        private string courseToRemove;
         private List<string> courseList;
         //Current number of strokes for a single hole
         private int strokes;
@@ -247,6 +250,12 @@ namespace GolfScorekeeper
                 BackgroundColor = darkGreenColor
             };
 
+            //CourseDetailPage
+            cdp = new CirclePage()
+            {
+                BackgroundColor = darkGreenColor
+            };
+
             //FinalPage (results screen)
             fp = new CirclePage()
             {
@@ -262,6 +271,7 @@ namespace GolfScorekeeper
             NavigationPage.SetHasNavigationBar(ep, false);
             NavigationPage.SetHasNavigationBar(fp, false);
             NavigationPage.SetHasNavigationBar(clp, false);
+            NavigationPage.SetHasNavigationBar(cdp, false);
 
             MainPage = np;
             scoreTrackerButton.Clicked += DetermineNewOrResumeGame;
@@ -461,8 +471,6 @@ namespace GolfScorekeeper
         protected void OnCourseListButtonClicked(object sender, System.EventArgs e)
         {
             GenerateCourseList(true);
-
-
             MainPage.Navigation.PushAsync(clp);
 
         }
@@ -502,7 +510,14 @@ namespace GolfScorekeeper
                     BackgroundColor = greenColor,
                     FontSize = courseNameFontSize
                 };
-                courseNameButton.Clicked += EvaluateCustomOrStandardGame;
+                if (courseLookupPage)
+                {
+                    courseNameButton.Clicked += ListCourseDetails;
+                }
+                else
+                {
+                    courseNameButton.Clicked += EvaluateCustomOrStandardGame;
+                }
                 coursesLayout.Children.Add(courseNameButton);
             }
         }
@@ -669,6 +684,52 @@ namespace GolfScorekeeper
             MainPage.Navigation.PushAsync(fp);
             MainPage.Navigation.RemovePage(ssp);
             midRound = false;
+        }
+
+        protected async void ListCourseDetails(object sender, System.EventArgs e)
+        {
+            Button removeButton = new Button() {
+                Text = "Remove course"
+            };
+
+            courseToRemove = (sender as Button).Text;
+
+            Label courseName = new Label()
+            {
+                Text = courseToRemove
+            };
+            
+            courseDetailLayout = new AbsoluteLayout
+            {
+                Children =
+                {
+                    removeButton,
+                    courseName
+                }
+            };
+
+            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, .2, 200, 60));
+            AbsoluteLayout.SetLayoutFlags(courseName, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(removeButton, new Rectangle(0.5, .8, 150, 60));
+            AbsoluteLayout.SetLayoutFlags(removeButton, AbsoluteLayoutFlags.PositionProportional);
+
+            removeButton.Clicked += RemoveCourse;
+
+            cdp.Content = courseDetailLayout;
+            await MainPage.Navigation.PushAsync(cdp);
+        }
+        protected void RemoveCourse(object sender, System.EventArgs e)
+        {
+            courses.RemoveCourse(courseToRemove);
+            GenerateCourseList(true);
+            if (midRound)
+            {
+                if (currentCourseName == courseToRemove)
+                {
+                    midRound = false;
+                }
+            }
+            MainPage.Navigation.RemovePage(cdp);
         }
 
         protected void OnAboutButtonClicked(object sender, System.EventArgs e)

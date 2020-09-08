@@ -72,5 +72,12 @@ namespace GolfScorekeeper
             }
         }
 
+        public void RemoveCourse(string courseName)
+        {
+            if (courses.ContainsKey(courseName))
+            {
+                courses.Remove(courseName);
+            }
+        }
     }
 }
