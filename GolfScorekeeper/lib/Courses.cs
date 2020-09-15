@@ -11,11 +11,6 @@ namespace GolfScorekeeper
         private Dictionary<string, int[]> courses = new Dictionary<string, int[]>()
         {
             { "Custom Round", new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
-            { "Bunker Hills East", new int[] {4, 4, 3, 5, 4, 5, 3, 4, 4} },
-            { "Bunker Hills North", new int[] {4, 4, 4, 5, 4, 3, 4, 3, 5} },
-            { "Bunker Hills West", new int[] {4, 5, 3, 4, 5, 4, 4, 3, 4} },
-            { "Eagle Valley", new int[] {5, 4, 4, 4, 3, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 5, 4} },
-            { "Hiawatha", new int[] {5, 5, 3, 4, 4, 4, 5, 3, 4, 5, 4, 3, 5, 4, 3, 4, 4, 4} }
         };
 
         public int GetNineOrEighteen(string courseName)

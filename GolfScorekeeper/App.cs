@@ -7,11 +7,15 @@ using Xamarin.Forms;
 using Tizen.Wearable.CircularUI.Forms;
 using Tizen.NUI.BaseComponents;
 using System.Text.RegularExpressions;
+using SQLite;
+using SQLitePCL;
+using System.IO;
 
 namespace GolfScorekeeper
 {
     public class App : Application
     {
+        private SQLiteConnection dbConnection;
         private Button scoreTrackerButton;
         private Button courseLookupButton;
         private Button aboutButton;
@@ -71,6 +75,44 @@ namespace GolfScorekeeper
         public App()
         {
             courses = new Courses();
+
+            //Get info from database
+            raw.SetProvider(new SQLite3Provider_sqlite3());
+            raw.FreezeProvider(true);
+
+            string dataPath = global::Tizen.Applications.Application.Current.DirectoryInfo.Data;
+            string databaseFileName = "courses.db3";
+            string databasePath = Path.Combine(dataPath, databaseFileName);
+
+            bool needCreateTable = false;
+
+            if (!File.Exists(databasePath))
+            {
+                needCreateTable = true;
+            }
+
+            dbConnection = new SQLiteConnection(databasePath);
+            if (needCreateTable)
+            {
+                //Create if not exists
+                dbConnection.CreateTable<Course>();
+            }
+
+            var courseList = dbConnection.Table<Course>();
+
+            List<int> courseParList = new List<int>();
+
+            foreach (var item in courseList)
+            {
+                courseParList.Clear();
+                for (int i = 0; i < item.ParList.Length; i++)
+                {
+                    courseParList.Add(Convert.ToInt32(item.ParList[i].ToString()));
+                }
+
+                int[] courseParListIntArray = courseParList.ToArray();
+                courses.AddNewCourse(item.Name, courseParListIntArray);
+            }
 
             scoreTrackerButton = new Button() { Text = "Score Tracker", BackgroundColor = greenColor };
             courseLookupButton = new Button() { Text = "Course Lookup", BackgroundColor = greenColor };
@@ -334,6 +376,13 @@ namespace GolfScorekeeper
                 int[] customCourseParListIntArray = customCourseParList.ToArray();
                 courses.AddNewCourse(currentCourseName, customCourseParListIntArray);
 
+                Course c = new Course 
+                { 
+                    Name = currentCourseName,
+                    ParList = pars    
+                };
+                dbConnection.Insert(c);
+
                 NewGame(currentCourseName);
                 MainPage.Navigation.RemovePage(ep);
             }
@@ -445,7 +494,10 @@ namespace GolfScorekeeper
 
         protected void OnNewGameQuestionButtonClicked(object sender, System.EventArgs e)
         {
+            //Bug fix where new custom course wouldn't show up if mid-round for that course the first time
+            GenerateCourseList(false);
             MainPage.Navigation.PushAsync(sp);
+            midRound = false;
             MainPage.Navigation.RemovePage(qp);
         }
 
@@ -729,6 +781,16 @@ namespace GolfScorekeeper
                     midRound = false;
                 }
             }
+
+            var queryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseToRemove + "'").FirstOrDefault();
+            if (queryResult != null)
+            {
+                dbConnection.RunInTransaction(() =>
+                {
+                    dbConnection.Delete(queryResult);
+                });
+            }
+
             MainPage.Navigation.RemovePage(cdp);
         }
 
