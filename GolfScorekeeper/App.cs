@@ -29,7 +29,6 @@ namespace GolfScorekeeper
         private Button customCourseNextButton;
         private Button customNineButton;
         private Button customEighteenButton;
-        private NavigationPage np;
         private CirclePage mp;
         private CirclePage sp;
         private CirclePage ssp;
@@ -48,7 +47,7 @@ namespace GolfScorekeeper
         private Button overallButton;
         private Button strokeButton;
         private StackLayout finalLayout;
-        private string courseToRemove;
+        private string courseNameText;
         private List<string> courseList;
         //Current number of strokes for a single hole
         private int strokes;
@@ -407,7 +406,7 @@ namespace GolfScorekeeper
         protected void EvaluateCustomOrStandardGame(object sender, System.EventArgs e)
         {
             string courseName = (sender as Button).Text;
-            if (courseName == "Custom Round")
+            if (courseName == "Add Course")
             {
                 NewCustomGame();
             }
@@ -744,26 +743,118 @@ namespace GolfScorekeeper
                 Text = "Remove course"
             };
 
-            courseToRemove = (sender as Button).Text;
+            courseNameText = (sender as Button).Text;
 
             Label courseName = new Label()
             {
-                Text = courseToRemove
+                Text = courseNameText
             };
-            
+
+            Label scoreCardLabel = new Label()
+            {
+                Text = "Scorecard"
+            };
+
+            Grid g = new Grid
+            {
+                RowDefinitions =
+                {
+                    new RowDefinition{ },
+                    new RowDefinition { Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ },
+                    new RowDefinition { Height = new GridLength(2, GridUnitType.Star) },
+
+                }
+            };
+
+            for (int i = 0; i < 9; i++)
+            {
+                g.Children.Add(new BoxView
+                {
+                    Color = darkGreenColor
+                }, i, 0);
+
+                g.Children.Add(new Label
+                {
+                    Text = Convert.ToString(i+1),
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center,
+                    FontSize = 5
+                }, i, 0);
+
+                g.Children.Add(new BoxView
+                {
+                    Color = grayColor
+                }, i, 1);
+
+                g.Children.Add(new Label
+                {
+                    Text = Convert.ToString(courses.GetHolePar(courseNameText, i+1)),
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center,
+                    FontSize = 5
+                }, i, 1);
+            } 
+
+            if (courses.GetNineOrEighteen(courseNameText) == 18)
+            {
+                for (int i = 0; i<9; i++)
+                {
+                    g.Children.Add(new BoxView
+                    {
+                        Color = darkGreenColor
+                    }, i, 2);
+
+                    g.Children.Add(new Label
+                    {
+                        Text = Convert.ToString(i+10),
+                        HorizontalOptions = LayoutOptions.Center,
+                        VerticalOptions = LayoutOptions.Center,
+                        FontSize = 5
+                    }, i, 2);
+
+                    g.Children.Add(new BoxView
+                    {
+                        Color = grayColor
+                    }, i, 3);
+
+                    g.Children.Add(new Label
+                    {
+                        Text = Convert.ToString(courses.GetHolePar(courseNameText, i + 1)),
+                        HorizontalOptions = LayoutOptions.Center,
+                        VerticalOptions = LayoutOptions.Center,
+                        FontSize = 5
+                    }, i, 3);
+                }
+            }
+
             courseDetailLayout = new AbsoluteLayout
             {
                 Children =
                 {
                     removeButton,
-                    courseName
+                    courseName,
+                    scoreCardLabel,
+                    g
                 }
             };
 
-            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, .2, 200, 60));
+            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, 0.5, 100, 60));
             AbsoluteLayout.SetLayoutFlags(courseName, AbsoluteLayoutFlags.PositionProportional);
-            AbsoluteLayout.SetLayoutBounds(removeButton, new Rectangle(0.5, .8, 150, 60));
+            AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.5, 0.2, 140, 60));
+            AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(removeButton, new Rectangle(0.5, .9, 150, 60));
             AbsoluteLayout.SetLayoutFlags(removeButton, AbsoluteLayoutFlags.PositionProportional);
+            if (courses.GetNineOrEighteen(courseNameText) == 9)
+            { 
+                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.5, 350, 100));
+                AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
+            }
+            else
+            {
+                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.4, 350, 100));
+                AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
+            }
 
             removeButton.Clicked += RemoveCourse;
 
@@ -772,17 +863,17 @@ namespace GolfScorekeeper
         }
         protected void RemoveCourse(object sender, System.EventArgs e)
         {
-            courses.RemoveCourse(courseToRemove);
+            courses.RemoveCourse(courseNameText);
             GenerateCourseList(true);
             if (midRound)
             {
-                if (currentCourseName == courseToRemove)
+                if (currentCourseName == courseNameText)
                 {
                     midRound = false;
                 }
             }
 
-            var queryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseToRemove + "'").FirstOrDefault();
+            var queryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseNameText + "'").FirstOrDefault();
             if (queryResult != null)
             {
                 dbConnection.RunInTransaction(() =>
