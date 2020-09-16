@@ -740,19 +740,22 @@ namespace GolfScorekeeper
         protected async void ListCourseDetails(object sender, System.EventArgs e)
         {
             Button removeButton = new Button() {
-                Text = "Remove course"
+                Text = "Remove course",
+                FontSize = 8
             };
 
             courseNameText = (sender as Button).Text;
 
             Label courseName = new Label()
             {
-                Text = courseNameText
+                Text = courseNameText,
+                FontSize = 8
             };
 
             Label scoreCardLabel = new Label()
             {
-                Text = "Scorecard"
+                Text = "Hole/Par",
+                FontSize = 6
             };
 
             Grid g = new Grid
@@ -839,21 +842,23 @@ namespace GolfScorekeeper
                 }
             };
 
-            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, 0.5, 100, 60));
+            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, 0.2, 250, 120));
             AbsoluteLayout.SetLayoutFlags(courseName, AbsoluteLayoutFlags.PositionProportional);
-            AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.5, 0.2, 140, 60));
-            AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
             AbsoluteLayout.SetLayoutBounds(removeButton, new Rectangle(0.5, .9, 150, 60));
             AbsoluteLayout.SetLayoutFlags(removeButton, AbsoluteLayoutFlags.PositionProportional);
             if (courses.GetNineOrEighteen(courseNameText) == 9)
             { 
-                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.5, 350, 100));
+                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.55, 350, 100));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.1, 0.65, 140, 60));
+                AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
             }
             else
             {
-                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.4, 350, 100));
+                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.5, 350, 100));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.1, 0.8, 140, 60));
+                AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
             }
 
             removeButton.Clicked += RemoveCourse;
