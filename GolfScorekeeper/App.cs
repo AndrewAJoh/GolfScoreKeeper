@@ -543,23 +543,14 @@ namespace GolfScorekeeper
 
             courseList = courses.GetCourseList();
 
-            int courseNameFontSize = 0;
             int startingIterator = courseLookupPage ? 1 : 0;
             for (int i = startingIterator; i < courseList.Count(); i++)
             {
-                if (i == startingIterator || i == courseList.Count() - 1)
-                {
-                    courseNameFontSize = 8;
-                }
-                else
-                {
-                    courseNameFontSize = 10;
-                }
                 Button courseNameButton = new Button()
                 {
                     Text = courseList[i],
                     BackgroundColor = greenColor,
-                    FontSize = courseNameFontSize
+                    FontSize = 8
                 };
                 if (courseLookupPage)
                 {
@@ -770,12 +761,12 @@ namespace GolfScorekeeper
                 }
             };
 
-            for (int i = 0; i < 9; i++)
+            for (int i = 0; i < courses.GetNineOrEighteen(courseNameText); i++)
             {
                 g.Children.Add(new BoxView
                 {
                     Color = darkGreenColor
-                }, i, 0);
+                }, i%9, (2*(i/9)));
 
                 g.Children.Add(new Label
                 {
@@ -783,12 +774,12 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 5
-                }, i, 0);
+                }, i%9, (2*(i/9)));
 
                 g.Children.Add(new BoxView
                 {
                     Color = grayColor
-                }, i, 1);
+                }, i%9, (2*(i/9))+1);
 
                 g.Children.Add(new Label
                 {
@@ -796,40 +787,8 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 5
-                }, i, 1);
+                }, i%9, (2*(i/9))+1);
             } 
-
-            if (courses.GetNineOrEighteen(courseNameText) == 18)
-            {
-                for (int i = 0; i<9; i++)
-                {
-                    g.Children.Add(new BoxView
-                    {
-                        Color = darkGreenColor
-                    }, i, 2);
-
-                    g.Children.Add(new Label
-                    {
-                        Text = Convert.ToString(i+10),
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center,
-                        FontSize = 5
-                    }, i, 2);
-
-                    g.Children.Add(new BoxView
-                    {
-                        Color = grayColor
-                    }, i, 3);
-
-                    g.Children.Add(new Label
-                    {
-                        Text = Convert.ToString(courses.GetHolePar(courseNameText, i + 1)),
-                        HorizontalOptions = LayoutOptions.Center,
-                        VerticalOptions = LayoutOptions.Center,
-                        FontSize = 5
-                    }, i, 3);
-                }
-            }
 
             courseDetailLayout = new AbsoluteLayout
             {
