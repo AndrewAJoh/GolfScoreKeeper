@@ -53,16 +53,18 @@ namespace GolfScorekeeper
 
             return currentScore - totalPar;
         }
-
-        public void AddNewCourse(string courseName, int[] parList)
+        //Return 1 if replacing existing course (to notify user)
+        public int AddNewCourse(string courseName, int[] parList)
         {
             if (!courses.ContainsKey(courseName) )
             {   
                 courses.Add(courseName, parList);
+                return 1;
             }
             else
             {
                 courses[courseName] = parList;
+                return 0;
             }
         }
 

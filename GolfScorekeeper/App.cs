@@ -375,17 +375,18 @@ namespace GolfScorekeeper
                 }
 
                 int[] customCourseParListIntArray = customCourseParList.ToArray();
-                courses.AddNewCourse(currentCourseName, customCourseParListIntArray);
+                int result = courses.AddNewCourse(currentCourseName, customCourseParListIntArray);
 
                 Course c = new Course 
                 { 
                     Name = currentCourseName,
                     ParList = pars    
                 };
-                dbConnection.Insert(c);
+                dbConnection.InsertOrReplace(c);
 
                 GenerateCourseList(false);
                 MainPage.Navigation.RemovePage(ep);
+                Toast.DisplayText("Current course information for " + currentCourseName + " has been overwritten.");
             }
         }
 
