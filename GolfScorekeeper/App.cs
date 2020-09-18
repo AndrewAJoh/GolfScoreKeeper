@@ -89,7 +89,7 @@ namespace GolfScorekeeper
             {
                 needCreateTable = true;
             }
-
+            
             dbConnection = new SQLiteConnection(databasePath);
             if (needCreateTable)
             {
@@ -318,6 +318,7 @@ namespace GolfScorekeeper
             scoreTrackerButton.Clicked += DetermineNewOrResumeGame;
             courseLookupButton.Clicked += OnCourseListButtonClicked;
         }
+        //Ask for course name. Happens before GoToParPrompt
         protected void GoToNamePrompt(object sender, System.EventArgs e)
         {
             nineOrEighteen = Convert.ToInt32((sender as Button).Text);
@@ -329,6 +330,7 @@ namespace GolfScorekeeper
             enterPageLayout.Children.Add(customCourseEntry);
             enterPageLayout.Children.Add(customCourseNextButton);
         }
+        //Ask for course pars. Rejects if course name is invalid.
         protected void GoToParPrompt(object sender, System.EventArgs e)
         {
             if (customCourseNextButton.Text == "Next")
@@ -364,7 +366,7 @@ namespace GolfScorekeeper
                     Toast.DisplayText("0s and symbols are not allowed.");
                     return;
                 }
-                //TODO: Add checking of entry
+
                 //Add course to list of courses
                 List<int> customCourseParList = new List<int>();
                 for (int i = 0; i < nineOrEighteen; i++)
@@ -382,7 +384,7 @@ namespace GolfScorekeeper
                 };
                 dbConnection.Insert(c);
 
-                NewGame(currentCourseName);
+                GenerateCourseList(false);
                 MainPage.Navigation.RemovePage(ep);
             }
         }
@@ -398,8 +400,6 @@ namespace GolfScorekeeper
             {
                 //Bring up course selection - it is a new game
                 GenerateCourseList(false);
-
-
                 MainPage.Navigation.PushAsync(sp);
             }
         }
@@ -408,7 +408,7 @@ namespace GolfScorekeeper
             string courseName = (sender as Button).Text;
             if (courseName == "Add Course")
             {
-                NewCustomGame();
+                AddNewCourse();
             }
             else
             {
@@ -417,7 +417,7 @@ namespace GolfScorekeeper
             }
         }
 
-        protected async void NewCustomGame()
+        protected async void AddNewCourse()
         {
             //initiate values
             customCoursePrompt = new Label { Text = "9 or 18 holes:" };
@@ -543,8 +543,22 @@ namespace GolfScorekeeper
 
             courseList = courses.GetCourseList();
 
-            int startingIterator = courseLookupPage ? 1 : 0;
-            for (int i = startingIterator; i < courseList.Count(); i++)
+            //Add "Add Course" button as the first option
+            if (!courseLookupPage)
+            {
+                Button addNewCourseButton = new Button
+                {
+                    Text = "Add Course",
+                    BackgroundColor = grayColor,
+                    FontSize = 8
+                };
+
+                addNewCourseButton.Clicked += EvaluateCustomOrStandardGame;
+                coursesLayout.Children.Add(addNewCourseButton);
+            }
+
+            //Add the list of courses in the database
+            for (int i = 0; i < courseList.Count(); i++)
             {
                 Button courseNameButton = new Button()
                 {
@@ -552,6 +566,7 @@ namespace GolfScorekeeper
                     BackgroundColor = greenColor,
                     FontSize = 8
                 };
+                    
                 if (courseLookupPage)
                 {
                     courseNameButton.Clicked += ListCourseDetails;

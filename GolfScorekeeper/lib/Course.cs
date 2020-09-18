@@ -10,8 +10,7 @@ namespace GolfScorekeeper
 {
     public class Course
     {
-        [PrimaryKey, AutoIncrement]
-        public int Id { get; set; }
+        [PrimaryKey]
         public string Name { get; set; }
         public string ParList { get; set; }
     }

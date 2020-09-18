@@ -10,7 +10,6 @@ namespace GolfScorekeeper
     {
         private Dictionary<string, int[]> courses = new Dictionary<string, int[]>()
         {
-            { "Add Course", new int[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0} },
         };
 
         public int GetNineOrEighteen(string courseName)
