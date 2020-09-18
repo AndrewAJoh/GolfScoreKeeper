@@ -59,12 +59,12 @@ namespace GolfScorekeeper
             if (!courses.ContainsKey(courseName) )
             {   
                 courses.Add(courseName, parList);
-                return 1;
+                return 0;
             }
             else
             {
                 courses[courseName] = parList;
-                return 0;
+                return 1;
             }
         }
 

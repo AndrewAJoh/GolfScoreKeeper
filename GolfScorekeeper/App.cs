@@ -24,6 +24,7 @@ namespace GolfScorekeeper
         private Button waterAstheticButton1;
         private Button waterAstheticButton2;
         private Label hole;
+        private Label areYouSureLabel;
         private Label customCoursePrompt;
         private Entry customCourseEntry;
         private Button customCourseNextButton;
@@ -37,6 +38,7 @@ namespace GolfScorekeeper
         private CirclePage ep;
         private CirclePage clp;
         private CirclePage cdp;
+        private CirclePage dp;
         private AbsoluteLayout homePageLayout;
         private StackLayout coursesLayout;
         private AbsoluteLayout enterPageLayout;
@@ -129,10 +131,14 @@ namespace GolfScorekeeper
             Button subtractStrokeButton = new Button() { Text = "-1", BackgroundColor = greenColor };
             Button nextHoleButton = new Button() { Text = "Next\nHole", FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)), BackgroundColor = sandColor, TextColor = Color.Black };
             Button previousHoleButton = new Button() { Text = "Prev\nHole", FontSize = Device.GetNamedSize(NamedSize.Small, typeof(Label)), BackgroundColor = sandColor, TextColor = Color.Black };
-            Button resumeGameQuestionButton = new Button() { Text = "Resume Game", FontSize = 8, BackgroundColor = greenColor };
-            Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = greenColor };
-            
-            
+            Button resumeGameQuestionButton = new Button() { Text = "Resume Game", BackgroundColor = greenColor };
+            Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = Color.DarkRed };
+
+            areYouSureLabel = new Label() { };
+            Button yesButton = new Button() { Text = "Yes", BackgroundColor = greenColor };
+            Button noButton = new Button() { Text = "No", BackgroundColor = Color.DarkRed };
+
+
             addStrokeButton.Clicked += OnAddStrokeButtonClicked;
             strokeButton.Clicked += OnStrokeButtonClicked;
             subtractStrokeButton.Clicked += OnSubtractStrokeButtonClicked;
@@ -144,9 +150,29 @@ namespace GolfScorekeeper
             waterAstheticButton1.Clicked += OnWaterAstheticButtonClicked;
             waterAstheticButton2.Clicked += OnWaterAstheticButtonClicked;
 
-            
+            AbsoluteLayout deleteCourseLayout = new AbsoluteLayout
+            {
+                Children =
+                {
+                    areYouSureLabel,
+                    yesButton,
+                    noButton
+                }
+            };
 
-            StackLayout questionCircleStackLayout = new CircleStackLayout 
+            AbsoluteLayout.SetLayoutBounds(areYouSureLabel, new Rectangle(0.5, .25, 250, 80));
+            AbsoluteLayout.SetLayoutFlags(areYouSureLabel, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(yesButton, new Rectangle(0.3, .75, 100, 60));
+            AbsoluteLayout.SetLayoutFlags(yesButton, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(noButton, new Rectangle(0.7, .75, 100, 60));
+            AbsoluteLayout.SetLayoutFlags(noButton, AbsoluteLayoutFlags.PositionProportional);
+
+            yesButton.Clicked += OnYesDeleteButtonClicked;
+            noButton.Clicked += OnNoDeleteButtonClicked;
+
+            AbsoluteLayout questionCircleStackLayout = new AbsoluteLayout 
             {
                 Children = 
                 {
@@ -154,6 +180,12 @@ namespace GolfScorekeeper
                     newGameQuestionButton
                 }
             };
+
+            AbsoluteLayout.SetLayoutBounds(resumeGameQuestionButton, new Rectangle(0.5, .25, 250, 80));
+            AbsoluteLayout.SetLayoutFlags(resumeGameQuestionButton, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(newGameQuestionButton, new Rectangle(0.5, .75, 250, 80));
+            AbsoluteLayout.SetLayoutFlags(newGameQuestionButton, AbsoluteLayoutFlags.PositionProportional);
 
             AbsoluteLayout.SetLayoutBounds(roundInfoButton, new Rectangle(0.5, 0, 155, 50));
             AbsoluteLayout.SetLayoutFlags(roundInfoButton, AbsoluteLayoutFlags.PositionProportional);
@@ -297,6 +329,13 @@ namespace GolfScorekeeper
                 BackgroundColor = darkGreenColor
             };
 
+            //DeletePage
+            dp = new CirclePage()
+            {
+                Content = deleteCourseLayout,
+                BackgroundColor = darkGreenColor
+            };
+
             //FinalPage (results screen)
             fp = new CirclePage()
             {
@@ -313,6 +352,7 @@ namespace GolfScorekeeper
             NavigationPage.SetHasNavigationBar(fp, false);
             NavigationPage.SetHasNavigationBar(clp, false);
             NavigationPage.SetHasNavigationBar(cdp, false);
+            NavigationPage.SetHasNavigationBar(dp, false);
 
             MainPage = np;
             scoreTrackerButton.Clicked += DetermineNewOrResumeGame;
@@ -386,7 +426,10 @@ namespace GolfScorekeeper
 
                 GenerateCourseList(false);
                 MainPage.Navigation.RemovePage(ep);
-                Toast.DisplayText("Current course information for " + currentCourseName + " has been overwritten.");
+                if (result == 1) 
+                {
+                    Toast.DisplayText("Current course information for " + currentCourseName + " has been overwritten.");
+                }
             }
         }
 
@@ -522,6 +565,11 @@ namespace GolfScorekeeper
 
         protected void OnCourseListButtonClicked(object sender, System.EventArgs e)
         {
+            if (courses.GetCourseCount() == 0)
+            {
+                Toast.DisplayText("You have not added any courses yet. Go to 'Score Tracker' -> 'Add Course'.");
+                return;
+            }
             GenerateCourseList(true);
             MainPage.Navigation.PushAsync(clp);
 
@@ -836,24 +884,29 @@ namespace GolfScorekeeper
                 AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
             }
 
-            removeButton.Clicked += RemoveCourse;
+            removeButton.Clicked += DisplayRemoveCourseScreen;
 
             cdp.Content = courseDetailLayout;
             await MainPage.Navigation.PushAsync(cdp);
         }
-        protected void RemoveCourse(object sender, System.EventArgs e)
+        protected async void DisplayRemoveCourseScreen(object sender, System.EventArgs e)
         {
-            courses.RemoveCourse(courseNameText);
+            areYouSureLabel.Text = "Delete all info for " + courseNameText + "?";
+            await MainPage.Navigation.PushAsync(dp);
+        }
+        protected void RemoveCourse(string courseName)
+        {
+            courses.RemoveCourse(courseName);
             GenerateCourseList(true);
             if (midRound)
             {
-                if (currentCourseName == courseNameText)
+                if (currentCourseName == courseName)
                 {
                     midRound = false;
                 }
             }
 
-            var queryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseNameText + "'").FirstOrDefault();
+            var queryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseName + "'").FirstOrDefault();
             if (queryResult != null)
             {
                 dbConnection.RunInTransaction(() =>
@@ -873,6 +926,23 @@ namespace GolfScorekeeper
         protected void OnWaterAstheticButtonClicked(object sender, System.EventArgs e)
         {
             Toast.DisplayText("Splash!");
+        }
+
+        protected void OnYesDeleteButtonClicked(object sender, System.EventArgs e)
+        {
+            //TODO: Try removing global usage here or revise the function that is called
+            RemoveCourse(courseNameText);
+            MainPage.Navigation.RemovePage(dp);
+
+            if (courses.GetCourseCount() == 0)
+            {
+                MainPage.Navigation.RemovePage(clp);
+            }
+        }
+
+        protected void OnNoDeleteButtonClicked(object sender, System.EventArgs e)
+        {
+            MainPage.Navigation.RemovePage(dp);
         }
 
         protected override void OnStart()
