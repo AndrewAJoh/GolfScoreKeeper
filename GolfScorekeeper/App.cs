@@ -749,44 +749,168 @@ namespace GolfScorekeeper
                 relativeCourseScoreString = Convert.ToString(currentCourseScoreRelativeToPar);
             }
 
-            finalLayout.Children.Add(new Label
+            Grid g = new Grid
             {
-                Text = "Final Score: " + currentCourseScore,
-                HorizontalOptions = LayoutOptions.Center,
-                HorizontalTextAlignment = TextAlignment.Center
-            });
+                RowDefinitions =
+                {
+                },
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition{ Width = 70 },
+                    new ColumnDefinition{ Width = 70 },
+                    new ColumnDefinition{ Width = 70 }
+                }
+            };
 
-            finalLayout.Children.Add(new Label
+            g.Children.Add(new BoxView
             {
-                Text = "Overall: " + relativeCourseScoreString,
+                Color = grayColor
+            }, 0, 0);
+
+            g.Children.Add(new Label
+            {
+                Text = "Hole",
                 HorizontalOptions = LayoutOptions.Center,
-                HorizontalTextAlignment = TextAlignment.Center
-            });
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 0, 0);
+
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 1, 0);
+
+            g.Children.Add(new Label
+            {
+                Text = "Par",
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 1, 0);
+
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 2, 0);
+
+            g.Children.Add(new Label
+            {
+                Text = "Score",
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 2, 0);
 
             for (int i = 0; i < nineOrEighteen; i++)
             {
-                finalLayout.Children.Add(new Label
+                g.Children.Add(new BoxView
                 {
-                    Text = "Hole " + Convert.ToString(i+1) + " (" + courses.GetHolePar(currentCourseName, i + 1) + "): " + scoreCard[i],
+                    Color = grayColor
+                }, 0, i+1);
+
+                g.Children.Add(new Label
+                {
+                    Text = Convert.ToString(i + 1),
                     HorizontalOptions = LayoutOptions.Center,
-                    HorizontalTextAlignment = TextAlignment.Center
-                });
-                if (i == 17 && nineOrEighteen == 18)
+                    VerticalOptions = LayoutOptions.Center,
+                    FontSize = 8
+                }, 0, i+1);
+
+                g.Children.Add(new BoxView
                 {
-                    finalLayout.Children.Add(new Label
-                    {
-                        Text = ""
-                    });
-                }
-                else if (i == 8 && nineOrEighteen == 9)
+                    Color = darkGreenColor
+                }, 1, i+1);
+
+                g.Children.Add(new Label
                 {
-                    finalLayout.Children.Add(new Label
-                    {
-                        Text = ""
-                    });
-                }
+                    Text = Convert.ToString(courses.GetHolePar(currentCourseName, i + 1)),
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center,
+                    FontSize = 8
+                }, 1, i+1);
+
+                g.Children.Add(new BoxView
+                {
+                    Color = greenColor
+                }, 2, i+1);
+
+                g.Children.Add(new Label
+                {
+                    Text = Convert.ToString(scoreCard[i]),
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center,
+                    FontSize = 8
+                }, 2, i+1);
             }
-            MainPage.BackgroundColor = Color.Yellow;
+
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 0, nineOrEighteen + 1);
+
+            g.Children.Add(new Label
+            {
+                Text = "Total",
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 0, nineOrEighteen + 1);
+            
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 1, nineOrEighteen + 1);
+
+            g.Children.Add(new Label
+            {
+                Text = Convert.ToString(courses.GetCoursePar(currentCourseName)),
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 1, nineOrEighteen + 1);
+
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 2, nineOrEighteen + 1);
+
+            g.Children.Add(new Label
+            {
+                Text = Convert.ToString(currentCourseScore),
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 2, nineOrEighteen + 1);
+
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 0, nineOrEighteen + 2);
+
+            g.Children.Add(new Label
+            {
+                Text = "Ovr",
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 0, nineOrEighteen + 2);
+
+            g.Children.Add(new BoxView
+            {
+                Color = grayColor
+            }, 2, nineOrEighteen + 2);
+
+            g.Children.Add(new Label
+            {
+                Text = Convert.ToString(currentCourseScoreRelativeToPar),
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+                FontSize = 8
+            }, 2, nineOrEighteen + 2);
+
+            finalLayout.Children.Add(g);
+            finalLayout.Children.Add(new Label{});
+
             MainPage.Navigation.PushAsync(fp);
             MainPage.Navigation.RemovePage(ssp);
             midRound = false;
