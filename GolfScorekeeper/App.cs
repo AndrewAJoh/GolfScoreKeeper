@@ -19,11 +19,17 @@ namespace GolfScorekeeper
         private Button scoreTrackerButton;
         private Button courseLookupButton;
         private Button aboutButton;
+        private Button teeBoxButton;
         private Button sandAstheticButton1;
         private Button sandAstheticButton2;
+        private Button sandAstheticButton3;
         private Button waterAstheticButton1;
         private Button waterAstheticButton2;
         private Label hole;
+        private Label redTeeBoxMarker1;
+        private Label redTeeBoxMarker2;
+        private Label whiteTeeBoxMarker1;
+        private Label whiteTeeBoxMarker2;
         private Label areYouSureLabel;
         private Label customCoursePrompt;
         private Entry customCourseEntry;
@@ -69,6 +75,7 @@ namespace GolfScorekeeper
         private bool midRound = false;
         private int nineOrEighteen;
         private Color greenColor = Color.FromRgb(10, 80, 22);
+        private Color puttingGreenColor = Color.FromRgb(84, 161, 88);
         private Color grayColor = Color.FromRgb(70, 70, 70);
         private Color darkGreenColor = Color.FromRgb(0, 35, 0);
         private Color sandColor = Color.FromRgb(218, 189, 129);
@@ -117,12 +124,18 @@ namespace GolfScorekeeper
 
             scoreTrackerButton = new Button() { Text = "Score Tracker", BackgroundColor = greenColor };
             courseLookupButton = new Button() { Text = "Course Lookup", BackgroundColor = greenColor };
-            aboutButton = new Button() { Text = "About", FontSize = 4, BackgroundColor = greenColor };
+            aboutButton = new Button() { Text = "About", FontSize = 4, BackgroundColor = puttingGreenColor };
+            teeBoxButton = new Button() { BackgroundColor = greenColor };
             sandAstheticButton1 = new Button() { Text = "", BackgroundColor = sandColor };
             sandAstheticButton2 = new Button() { Text = "", BackgroundColor = sandColor };
+            sandAstheticButton3 = new Button() { Text = "", BackgroundColor = sandColor };
             waterAstheticButton1 = new Button() { Text = "", BackgroundColor = waterColor };
-            waterAstheticButton2 = new Button() { Text = "", BackgroundColor = waterColor };
+            waterAstheticButton2 = new Button() { Text = "", BackgroundColor = waterColor};
             hole = new Label() { Text = ".", TextColor = Color.Black };
+            redTeeBoxMarker1 = new Label() { Text = ".", TextColor = Color.Red };
+            redTeeBoxMarker2 = new Label() { Text = ".", TextColor = Color.Red };
+            whiteTeeBoxMarker1 = new Label() { Text = ".", TextColor = Color.White };
+            whiteTeeBoxMarker2 = new Label() { Text = ".", TextColor = Color.White };
 
             roundInfoButton = new Button() { Text = "", BackgroundColor = grayColor };
             overallButton = new Button() { Text = "", BackgroundColor = grayColor };
@@ -208,29 +221,47 @@ namespace GolfScorekeeper
             AbsoluteLayout.SetLayoutBounds(previousHoleButton, new Rectangle(0, 0, 100, 360));
             AbsoluteLayout.SetLayoutFlags(previousHoleButton, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(scoreTrackerButton, new Rectangle(0, 0.35, 200, 90));
+            AbsoluteLayout.SetLayoutBounds(scoreTrackerButton, new Rectangle(0.1, 0.35, 200, 80));
             AbsoluteLayout.SetLayoutFlags(scoreTrackerButton, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(courseLookupButton, new Rectangle(0, 0.65, 200, 70));
+            AbsoluteLayout.SetLayoutBounds(courseLookupButton, new Rectangle(0.1, 0.7, 200, 80));
             AbsoluteLayout.SetLayoutFlags(courseLookupButton, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(aboutButton, new Rectangle(0.8, 0.5, 80, 80));
+            AbsoluteLayout.SetLayoutBounds(aboutButton, new Rectangle(0.88, 0.35, 75, 75));
             AbsoluteLayout.SetLayoutFlags(aboutButton, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(sandAstheticButton1, new Rectangle(0.65, 0.3, 40, 40));
+            AbsoluteLayout.SetLayoutBounds(teeBoxButton, new Rectangle(0.81, 0.69, 60, 50));
+            AbsoluteLayout.SetLayoutFlags(teeBoxButton, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(sandAstheticButton1, new Rectangle(0.65, 0.5, 25, 25));
             AbsoluteLayout.SetLayoutFlags(sandAstheticButton1, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(sandAstheticButton2, new Rectangle(0.8, 0.74, 80, 50));
+            AbsoluteLayout.SetLayoutBounds(sandAstheticButton2, new Rectangle(0.1, 0.92, 60, 40));
             AbsoluteLayout.SetLayoutFlags(sandAstheticButton2, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(sandAstheticButton3, new Rectangle(0.65, 0.28, 25, 25));
+            AbsoluteLayout.SetLayoutFlags(sandAstheticButton3, AbsoluteLayoutFlags.PositionProportional);
 
             AbsoluteLayout.SetLayoutBounds(waterAstheticButton1, new Rectangle(0.3, 0, 250, 80));
             AbsoluteLayout.SetLayoutFlags(waterAstheticButton1, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(waterAstheticButton2, new Rectangle(0.2, 1, 200, 80));
+            AbsoluteLayout.SetLayoutBounds(waterAstheticButton2, new Rectangle(0.8, 1, 200, 70));
             AbsoluteLayout.SetLayoutFlags(waterAstheticButton2, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(hole, new Rectangle(0.8, .4, 30, 30));
+            AbsoluteLayout.SetLayoutBounds(hole, new Rectangle(0.85, .4, 30, 30));
             AbsoluteLayout.SetLayoutFlags(hole, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(redTeeBoxMarker1, new Rectangle(0.78, .62, 30, 30));
+            AbsoluteLayout.SetLayoutFlags(redTeeBoxMarker1, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(redTeeBoxMarker2, new Rectangle(0.78, .67, 30, 30));
+            AbsoluteLayout.SetLayoutFlags(redTeeBoxMarker2, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(whiteTeeBoxMarker1, new Rectangle(0.86, .62, 30, 30));
+            AbsoluteLayout.SetLayoutFlags(whiteTeeBoxMarker1, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(whiteTeeBoxMarker2, new Rectangle(0.86, .67, 30, 30));
+            AbsoluteLayout.SetLayoutFlags(whiteTeeBoxMarker2, AbsoluteLayoutFlags.PositionProportional);
 
             homePageLayout = new AbsoluteLayout
             {
@@ -239,11 +270,17 @@ namespace GolfScorekeeper
                     scoreTrackerButton,
                     courseLookupButton,
                     aboutButton,
+                    teeBoxButton,
                     sandAstheticButton1,
                     sandAstheticButton2,
+                    sandAstheticButton3,
                     waterAstheticButton1,
                     waterAstheticButton2,
-                    hole
+                    hole,
+                    redTeeBoxMarker1,
+                    redTeeBoxMarker2,
+                    whiteTeeBoxMarker1,
+                    whiteTeeBoxMarker2
                 }
             };
 
