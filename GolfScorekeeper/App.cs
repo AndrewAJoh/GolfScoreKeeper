@@ -31,6 +31,7 @@ namespace GolfScorekeeper
         private Label whiteTeeBoxMarker1;
         private Label whiteTeeBoxMarker2;
         private Label areYouSureLabel;
+        private Label areYouReallySureLabel;
         private Label customCoursePrompt;
         private Entry customCourseEntry;
         private Button customCourseNextButton;
@@ -89,24 +90,15 @@ namespace GolfScorekeeper
             raw.FreezeProvider(true);
 
             string dataPath = global::Tizen.Applications.Application.Current.DirectoryInfo.Data;
-            string databaseFileName = "courses.db3";
-            string databasePath = Path.Combine(dataPath, databaseFileName);
+            string courseDatabaseFileName = "courses2.db3";
+            string courseDatabasePath = Path.Combine(dataPath, courseDatabaseFileName);
 
-            bool needCreateTable = false;
-
-            if (!File.Exists(databasePath))
-            {
-                needCreateTable = true;
-            }
-            
-            dbConnection = new SQLiteConnection(databasePath);
-            if (needCreateTable)
-            {
-                //Create if not exists
-                dbConnection.CreateTable<Course>();
-            }
+            dbConnection = new SQLiteConnection(courseDatabasePath);
+            dbConnection.CreateTable<CurrentGame>();
+            dbConnection.CreateTable<Course>();
 
             var courseList = dbConnection.Table<Course>();
+            var currentGameList = dbConnection.Table<CurrentGame>();
 
             List<int> courseParList = new List<int>();
 
@@ -122,6 +114,49 @@ namespace GolfScorekeeper
                 courses.AddNewCourse(item.Name, courseParListIntArray);
             }
 
+            var currentGame = 0;
+            foreach (var item in currentGameList)
+            {
+                currentGame++;
+            }
+
+            if (currentGame == 1)
+            {
+                foreach (var gameRecord in currentGameList)
+                {
+                    midRound = true;
+                    currentCourseName = gameRecord.CourseName;
+                    currentHole = gameRecord.CurrentHole;
+                    furthestHole = gameRecord.FurthestHole;
+                    currentCourseScore = gameRecord.CurrentCourseScore;
+                    nineOrEighteen = courses.GetNineOrEighteen(currentCourseName);
+                    if (nineOrEighteen == 18)
+                    {
+                        scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                    }
+                    else
+                    {
+                        scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+                    }
+                    for (int i = 0; i < gameRecord.Scorecard.Length; i++)
+                    {
+                        scoreCard[i] = Convert.ToInt32(Convert.ToString(gameRecord.Scorecard[i]));
+                    }
+                    strokes = gameRecord.Strokes;
+
+                    if ((currentHole == furthestHole) && (scoreCard[furthestHole - 1] == 0) && (furthestHole != 1)){
+                        currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole-1, currentCourseScore);
+                    }
+                    else if ((currentHole == furthestHole) && (scoreCard[furthestHole - 1] == 0) && (furthestHole == 1))
+                    {
+                        currentCourseScoreRelativeToPar = 0;
+                    }
+                    else { 
+                        currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
+                    }
+                }
+            }
+
             scoreTrackerButton = new Button() { Text = "Score Tracker", BackgroundColor = greenColor };
             courseLookupButton = new Button() { Text = "Course Lookup", BackgroundColor = greenColor };
             aboutButton = new Button() { Text = "About", FontSize = 4, BackgroundColor = puttingGreenColor };
@@ -130,7 +165,7 @@ namespace GolfScorekeeper
             sandAstheticButton2 = new Button() { Text = "", BackgroundColor = sandColor };
             sandAstheticButton3 = new Button() { Text = "", BackgroundColor = sandColor };
             waterAstheticButton1 = new Button() { Text = "", BackgroundColor = waterColor };
-            waterAstheticButton2 = new Button() { Text = "", BackgroundColor = waterColor};
+            waterAstheticButton2 = new Button() { Text = "", BackgroundColor = waterColor };
             hole = new Label() { Text = ".", TextColor = Color.Black };
             redTeeBoxMarker1 = new Label() { Text = ".", TextColor = Color.Red };
             redTeeBoxMarker2 = new Label() { Text = ".", TextColor = Color.Red };
@@ -148,6 +183,7 @@ namespace GolfScorekeeper
             Button newGameQuestionButton = new Button() { Text = "New Round", BackgroundColor = Color.DarkRed };
 
             areYouSureLabel = new Label() { };
+            areYouReallySureLabel = new Label() { FontSize = 8 };
             Button yesButton = new Button() { Text = "Yes", BackgroundColor = greenColor };
             Button noButton = new Button() { Text = "No", BackgroundColor = Color.DarkRed };
 
@@ -169,12 +205,16 @@ namespace GolfScorekeeper
                 {
                     areYouSureLabel,
                     yesButton,
-                    noButton
+                    noButton,
+                    areYouReallySureLabel
                 }
             };
 
             AbsoluteLayout.SetLayoutBounds(areYouSureLabel, new Rectangle(0.5, .25, 250, 80));
             AbsoluteLayout.SetLayoutFlags(areYouSureLabel, AbsoluteLayoutFlags.PositionProportional);
+
+            AbsoluteLayout.SetLayoutBounds(areYouReallySureLabel, new Rectangle(0.5, .50, 250, 80));
+            AbsoluteLayout.SetLayoutFlags(areYouReallySureLabel, AbsoluteLayoutFlags.PositionProportional);
 
             AbsoluteLayout.SetLayoutBounds(yesButton, new Rectangle(0.3, .75, 100, 60));
             AbsoluteLayout.SetLayoutFlags(yesButton, AbsoluteLayoutFlags.PositionProportional);
@@ -185,9 +225,9 @@ namespace GolfScorekeeper
             yesButton.Clicked += OnYesDeleteButtonClicked;
             noButton.Clicked += OnNoDeleteButtonClicked;
 
-            AbsoluteLayout questionCircleStackLayout = new AbsoluteLayout 
+            AbsoluteLayout questionCircleStackLayout = new AbsoluteLayout
             {
-                Children = 
+                Children =
                 {
                     resumeGameQuestionButton,
                     newGameQuestionButton
@@ -342,8 +382,8 @@ namespace GolfScorekeeper
             };
 
             //QuestionPage
-            qp = new CirclePage() 
-            { 
+            qp = new CirclePage()
+            {
                 Content = questionLayout,
                 BackgroundColor = darkGreenColor
             };
@@ -438,7 +478,7 @@ namespace GolfScorekeeper
 
                 var parRegex = new Regex("^[1-9]*$");
 
-                if (!parRegex.IsMatch(pars)) 
+                if (!parRegex.IsMatch(pars))
                 {
                     Toast.DisplayText("0s and symbols are not allowed.");
                     return;
@@ -454,16 +494,16 @@ namespace GolfScorekeeper
                 int[] customCourseParListIntArray = customCourseParList.ToArray();
                 int result = courses.AddNewCourse(currentCourseName, customCourseParListIntArray);
 
-                Course c = new Course 
-                { 
+                Course c = new Course
+                {
                     Name = currentCourseName,
-                    ParList = pars    
+                    ParList = pars
                 };
                 dbConnection.InsertOrReplace(c);
 
                 GenerateCourseList(false);
                 MainPage.Navigation.RemovePage(ep);
-                if (result == 1) 
+                if (result == 1)
                 {
                     Toast.DisplayText("Current course information for " + currentCourseName + " has been overwritten.");
                 }
@@ -503,7 +543,7 @@ namespace GolfScorekeeper
             //initiate values
             customCoursePrompt = new Label { Text = "9 or 18 holes:" };
             customCourseEntry = new Entry() { };
-            customCourseNextButton = new Button() { Text = "Next"};
+            customCourseNextButton = new Button() { Text = "Next" };
             customNineButton = new Button() { Text = "9" };
             customEighteenButton = new Button() { Text = "18" };
 
@@ -556,8 +596,15 @@ namespace GolfScorekeeper
                 scoreCard = new int[] { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
             }
 
-            roundInfoButton.Text = "H" + Convert.ToString(currentHole)+ " P" + Convert.ToString(courses.GetHolePar(currentCourseName, 1));
-            overallButton.Text = "ovr: " + Convert.ToString(currentCourseScoreRelativeToPar);
+            roundInfoButton.Text = "H" + Convert.ToString(currentHole) + " P" + Convert.ToString(courses.GetHolePar(currentCourseName, 1));
+            if (currentCourseScoreRelativeToPar > 0)
+            {
+                overallButton.Text = "ovr: +" + Convert.ToString(currentCourseScoreRelativeToPar);
+            }
+            else 
+            {
+                overallButton.Text = "ovr: " + Convert.ToString(currentCourseScoreRelativeToPar);
+            }
             strokeButton.Text = Convert.ToString(strokes);
 
             await MainPage.Navigation.PushAsync(ssp);
@@ -567,7 +614,16 @@ namespace GolfScorekeeper
         {
             //Keep values
             roundInfoButton.Text = "H" + Convert.ToString(currentHole) + " P" + Convert.ToString(courses.GetHolePar(currentCourseName, currentHole));
-            overallButton.Text = "ovr: " + currentCourseScoreRelativeToPar;
+
+            if (currentCourseScoreRelativeToPar > 0)
+            {
+                overallButton.Text = "ovr: +" + Convert.ToString(currentCourseScoreRelativeToPar);
+            }
+            else
+            {
+                overallButton.Text = "ovr: " + Convert.ToString(currentCourseScoreRelativeToPar);
+            }
+            strokeButton.Text = Convert.ToString(strokes);
             await MainPage.Navigation.PushAsync(ssp);
             MainPage.Navigation.RemovePage(qp);
         }
@@ -578,6 +634,17 @@ namespace GolfScorekeeper
             GenerateCourseList(false);
             MainPage.Navigation.PushAsync(sp);
             midRound = false;
+
+            //Reset CurrentGame table
+            var currentGameQueryResult = dbConnection.Query<CurrentGame>("select * from CurrentGame").FirstOrDefault();
+            if (currentGameQueryResult != null)
+            {
+                dbConnection.RunInTransaction(() =>
+                {
+                    dbConnection.Delete(currentGameQueryResult);
+                });
+            }
+
             MainPage.Navigation.RemovePage(qp);
         }
 
@@ -652,7 +719,7 @@ namespace GolfScorekeeper
                     BackgroundColor = greenColor,
                     FontSize = 8
                 };
-                    
+
                 if (courseLookupPage)
                 {
                     courseNameButton.Clicked += ListCourseDetails;
@@ -703,7 +770,7 @@ namespace GolfScorekeeper
             {
                 return;
             }
-            
+
             if (strokes == 0)
             {
                 Toast.DisplayText("Enter a score before returning to previous holes");
@@ -715,7 +782,7 @@ namespace GolfScorekeeper
                 currentCourseScoreRelativeToPar = courses.CalculateCurrentScore(currentCourseName, furthestHole, currentCourseScore);
             }
             currentHole -= 1;
-            
+
 
             UpdateButtonsPrevious();
         }
@@ -753,7 +820,6 @@ namespace GolfScorekeeper
             strokes = scoreCard[currentHole - 1];
             strokeButton.Text = Convert.ToString(strokes);
         }
-
         public void FinishRound()
         {
             finalLayout = new StackLayout
@@ -843,7 +909,7 @@ namespace GolfScorekeeper
                 g.Children.Add(new BoxView
                 {
                     Color = grayColor
-                }, 0, i+1);
+                }, 0, i + 1);
 
                 g.Children.Add(new Label
                 {
@@ -851,12 +917,12 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 8
-                }, 0, i+1);
+                }, 0, i + 1);
 
                 g.Children.Add(new BoxView
                 {
                     Color = darkGreenColor
-                }, 1, i+1);
+                }, 1, i + 1);
 
                 g.Children.Add(new Label
                 {
@@ -864,12 +930,12 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 8
-                }, 1, i+1);
+                }, 1, i + 1);
 
                 g.Children.Add(new BoxView
                 {
                     Color = greenColor
-                }, 2, i+1);
+                }, 2, i + 1);
 
                 g.Children.Add(new Label
                 {
@@ -877,7 +943,7 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 8
-                }, 2, i+1);
+                }, 2, i + 1);
             }
 
             g.Children.Add(new BoxView
@@ -892,7 +958,7 @@ namespace GolfScorekeeper
                 VerticalOptions = LayoutOptions.Center,
                 FontSize = 8
             }, 0, nineOrEighteen + 1);
-            
+
             g.Children.Add(new BoxView
             {
                 Color = grayColor
@@ -946,11 +1012,22 @@ namespace GolfScorekeeper
             }, 2, nineOrEighteen + 2);
 
             finalLayout.Children.Add(g);
-            finalLayout.Children.Add(new Label{});
+            finalLayout.Children.Add(new Label { });
 
             MainPage.Navigation.PushAsync(fp);
             MainPage.Navigation.RemovePage(ssp);
             midRound = false;
+
+            //Reset all round counters
+            var currentGameQueryResult = dbConnection.Query<CurrentGame>("select * from CurrentGame").FirstOrDefault();
+            if (currentGameQueryResult != null)
+            {
+                dbConnection.RunInTransaction(() =>
+                {
+                    dbConnection.Delete(currentGameQueryResult);
+                });
+            }
+
         }
 
         protected async void ListCourseDetails(object sender, System.EventArgs e)
@@ -991,29 +1068,29 @@ namespace GolfScorekeeper
                 g.Children.Add(new BoxView
                 {
                     Color = darkGreenColor
-                }, i%9, (2*(i/9)));
+                }, i % 9, (2 * (i / 9)));
 
                 g.Children.Add(new Label
                 {
-                    Text = Convert.ToString(i+1),
+                    Text = Convert.ToString(i + 1),
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 5
-                }, i%9, (2*(i/9)));
+                }, i % 9, (2 * (i / 9)));
 
                 g.Children.Add(new BoxView
                 {
                     Color = grayColor
-                }, i%9, (2*(i/9))+1);
+                }, i % 9, (2 * (i / 9)) + 1);
 
                 g.Children.Add(new Label
                 {
-                    Text = Convert.ToString(courses.GetHolePar(courseNameText, i+1)),
+                    Text = Convert.ToString(courses.GetHolePar(courseNameText, i + 1)),
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 5
-                }, i%9, (2*(i/9))+1);
-            } 
+                }, i % 9, (2 * (i / 9)) + 1);
+            }
 
             courseDetailLayout = new AbsoluteLayout
             {
@@ -1031,7 +1108,7 @@ namespace GolfScorekeeper
             AbsoluteLayout.SetLayoutBounds(removeButton, new Rectangle(0.5, .9, 150, 60));
             AbsoluteLayout.SetLayoutFlags(removeButton, AbsoluteLayoutFlags.PositionProportional);
             if (courses.GetNineOrEighteen(courseNameText) == 9)
-            { 
+            {
                 AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.55, 350, 100));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
                 AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.1, 0.65, 140, 60));
@@ -1050,9 +1127,19 @@ namespace GolfScorekeeper
             cdp.Content = courseDetailLayout;
             await MainPage.Navigation.PushAsync(cdp);
         }
+        
+
         protected async void DisplayRemoveCourseScreen(object sender, System.EventArgs e)
         {
             areYouSureLabel.Text = "Delete all info for " + courseNameText + "?";
+            if ((midRound == true) && (courseNameText == currentCourseName))
+            {
+                areYouReallySureLabel.Text = "You will lose all data for your current round";
+            }
+            else
+            {
+                areYouReallySureLabel.Text = "";
+            }
             await MainPage.Navigation.PushAsync(dp);
         }
         protected void RemoveCourse(string courseName)
@@ -1064,15 +1151,23 @@ namespace GolfScorekeeper
                 if (currentCourseName == courseName)
                 {
                     midRound = false;
+                    var currentGameQueryResult = dbConnection.Query<CurrentGame>("select * from CurrentGame").FirstOrDefault();
+                    if (currentGameQueryResult != null)
+                    {
+                        dbConnection.RunInTransaction(() =>
+                        {
+                            dbConnection.Delete(currentGameQueryResult);
+                        });
+                    }
                 }
             }
 
-            var queryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseName + "'").FirstOrDefault();
-            if (queryResult != null)
+            var courseQueryResult = dbConnection.Query<Course>("select * from Course where Name = '" + courseName + "'").FirstOrDefault();
+            if (courseQueryResult != null)
             {
                 dbConnection.RunInTransaction(() =>
                 {
-                    dbConnection.Delete(queryResult);
+                    dbConnection.Delete(courseQueryResult);
                 });
             }
 
@@ -1091,7 +1186,6 @@ namespace GolfScorekeeper
 
         protected void OnYesDeleteButtonClicked(object sender, System.EventArgs e)
         {
-            //TODO: Try removing global usage here or revise the function that is called
             RemoveCourse(courseNameText);
             MainPage.Navigation.RemovePage(dp);
 
@@ -1113,7 +1207,36 @@ namespace GolfScorekeeper
 
         protected override void OnSleep()
         {
-            // Handle when your app sleeps
+            if (midRound)
+            {
+                CurrentGame gameRecord = new CurrentGame
+                {
+                    CourseName = currentCourseName,
+                    CurrentHole = currentHole,
+                    FurthestHole = furthestHole,
+                    Strokes = strokes
+                };
+
+                if (currentHole == furthestHole)
+                {
+                    scoreCard[currentHole - 1] = strokes;
+                }
+
+                var subScoreCard = "";
+                var courseScore = 0;
+
+                for (int i = 0; i < scoreCard.Length; i++)
+                {
+                    subScoreCard += Convert.ToString(scoreCard[i]);
+                    courseScore += scoreCard[i];
+                }
+
+                gameRecord.Scorecard = subScoreCard;
+                gameRecord.Id = 1;
+                gameRecord.CurrentCourseScore = courseScore;
+
+                dbConnection.InsertOrReplace(gameRecord);
+            }
         }
 
         protected override void OnResume()
