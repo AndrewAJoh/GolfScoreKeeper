@@ -97,6 +97,7 @@ namespace GolfScorekeeper
             string courseDatabasePath = Path.Combine(dataPath, courseDatabaseFileName);
 
             dbConnection = new SQLiteConnection(courseDatabasePath);
+
             dbConnection.CreateTable<CurrentGame>();
             dbConnection.CreateTable<Course>();
 
@@ -1053,7 +1054,7 @@ namespace GolfScorekeeper
 
             g.Children.Add(new Label
             {
-                Text = Convert.ToString(currentCourseScoreRelativeToPar),
+                Text = currentCourseScoreRelativeToPar > 0 ? "+" + Convert.ToString(currentCourseScoreRelativeToPar) : Convert.ToString(currentCourseScoreRelativeToPar),
                 HorizontalOptions = LayoutOptions.Center,
                 VerticalOptions = LayoutOptions.Center,
                 FontSize = 8
@@ -1094,7 +1095,7 @@ namespace GolfScorekeeper
                 FontSize = 8
             };
 
-            Label scoreCardLabel = new Label()
+            Label holeParLabel = new Label()
             {
                 Text = "Hole/Par",
                 FontSize = 6
@@ -1147,7 +1148,7 @@ namespace GolfScorekeeper
                 {
                     removeButton,
                     courseName,
-                    scoreCardLabel,
+                    holeParLabel,
                     g
                 }
             };
@@ -1160,15 +1161,15 @@ namespace GolfScorekeeper
             {
                 AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.55, 350, 100));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
-                AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.1, 0.65, 140, 60));
-                AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(holeParLabel, new Rectangle(0.1, 0.65, 140, 60));
+                AbsoluteLayout.SetLayoutFlags(holeParLabel, AbsoluteLayoutFlags.PositionProportional);
             }
             else
             {
                 AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.5, 350, 100));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
-                AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.1, 0.8, 140, 60));
-                AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(holeParLabel, new Rectangle(0.1, 0.8, 140, 60));
+                AbsoluteLayout.SetLayoutFlags(holeParLabel, AbsoluteLayoutFlags.PositionProportional);
             }
 
             removeButton.Clicked += DisplayRemoveCourseScreen;
@@ -1261,7 +1262,14 @@ namespace GolfScorekeeper
 
             Label scoreCardLabel = new Label()
             {
-                Text = "Current Scorecard",
+                Text = "Scorecard",
+                HorizontalOptions = LayoutOptions.Center,
+                FontSize = 6
+            };
+
+            Label holeParLabel = new Label()
+            {
+                Text = "Hole/Par/Score",
                 HorizontalOptions = LayoutOptions.Center,
                 FontSize = 6
             };
@@ -1270,10 +1278,12 @@ namespace GolfScorekeeper
             {
                 RowDefinitions =
                 {
-                    new RowDefinition{ },
-                    new RowDefinition { Height = new GridLength(2, GridUnitType.Star) },
-                    new RowDefinition{ },
-                    new RowDefinition { Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ Height = new GridLength(2, GridUnitType.Star) },
+                    new RowDefinition{ Height = new GridLength(2, GridUnitType.Star) },
 
                 }
             };
@@ -1283,7 +1293,7 @@ namespace GolfScorekeeper
                 g.Children.Add(new BoxView
                 {
                     Color = darkGreenColor
-                }, i % 9, (2 * (i / 9)));
+                }, i % 9, (3 * (i / 9)));
 
                 g.Children.Add(new Label
                 {
@@ -1291,12 +1301,25 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 5
-                }, i % 9, (2 * (i / 9)));
+                }, i % 9, (3 * (i / 9)));
+
+                g.Children.Add(new BoxView
+                {
+                    Color = puttingGreenColor
+                }, i % 9, (3 * (i / 9)) + 1);
+
+                g.Children.Add(new Label
+                {
+                    Text = Convert.ToString(courses.GetHolePar(currentCourseName, i + 1)),
+                    HorizontalOptions = LayoutOptions.Center,
+                    VerticalOptions = LayoutOptions.Center,
+                    FontSize = 5
+                }, i % 9, (3 * (i / 9)) + 1);
 
                 g.Children.Add(new BoxView
                 {
                     Color = grayColor
-                }, i % 9, (2 * (i / 9)) + 1);
+                }, i % 9, (3 * (i / 9)) + 2);
 
                 g.Children.Add(new Label
                 {
@@ -1304,7 +1327,7 @@ namespace GolfScorekeeper
                     HorizontalOptions = LayoutOptions.Center,
                     VerticalOptions = LayoutOptions.Center,
                     FontSize = 5
-                }, i % 9, (2 * (i / 9)) + 1);
+                }, i % 9, (3 * (i / 9)) + 2);
             }
 
             currentScoreCardLayout = new AbsoluteLayout
@@ -1313,25 +1336,28 @@ namespace GolfScorekeeper
                 {
                     courseName,
                     scoreCardLabel,
+                    holeParLabel,
                     g
                 }
             };
             
-            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, 0.2, 250, 120));
+            AbsoluteLayout.SetLayoutBounds(courseName, new Rectangle(0.5, 0.1, 250, 120));
             AbsoluteLayout.SetLayoutFlags(courseName, AbsoluteLayoutFlags.PositionProportional);
+            AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.5, 0.2, 300, 60));
+            AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
             if (nineOrEighteen == 9)
             {
-                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.55, 350, 100));
+                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.55, 330, 140));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
-                AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.5, 0.65, 300, 60));
-                AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(holeParLabel, new Rectangle(0.5, 0.65, 300, 60));
+                AbsoluteLayout.SetLayoutFlags(holeParLabel, AbsoluteLayoutFlags.PositionProportional);
             }
             else
             {
-                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.5, 350, 100));
+                AbsoluteLayout.SetLayoutBounds(g, new Rectangle(0.5, 0.5, 330, 140));
                 AbsoluteLayout.SetLayoutFlags(g, AbsoluteLayoutFlags.PositionProportional);
-                AbsoluteLayout.SetLayoutBounds(scoreCardLabel, new Rectangle(0.5, 0.8, 300, 60));
-                AbsoluteLayout.SetLayoutFlags(scoreCardLabel, AbsoluteLayoutFlags.PositionProportional);
+                AbsoluteLayout.SetLayoutBounds(holeParLabel, new Rectangle(0.5, 0.9, 300, 60));
+                AbsoluteLayout.SetLayoutFlags(holeParLabel, AbsoluteLayoutFlags.PositionProportional);
             }
 
             scp.Content = currentScoreCardLayout;
