@@ -50,7 +50,7 @@ namespace GolfScorekeeper
         private AbsoluteLayout courseDetailLayout;
         private AbsoluteLayout currentScoreCardLayout;
         private CircleScrollView courseSelectionLayout;
-        CircleScrollView finalScreenLayout;
+        private CircleScrollView finalScreenLayout;
         private Button roundInfoButton;
         private Button overallButton;
         private Button strokeButton;
@@ -170,7 +170,7 @@ namespace GolfScorekeeper
             sandAstheticButton3 = new Button() { Text = "", BackgroundColor = sandColor };
             waterAstheticButton1 = new Button() { Text = "", BackgroundColor = waterColor };
             waterAstheticButton2 = new Button() { Text = "", BackgroundColor = waterColor };
-            hole = new Label() { Text = ".", TextColor = Color.Black };
+            hole = new Label() { Text = ".", TextColor = Color.Black, HorizontalTextAlignment = TextAlignment.Center };
             redTeeBoxMarker1 = new Label() { Text = ".", TextColor = Color.Red };
             redTeeBoxMarker2 = new Label() { Text = ".", TextColor = Color.Red };
             whiteTeeBoxMarker1 = new Label() { Text = ".", TextColor = Color.White };
@@ -203,7 +203,7 @@ namespace GolfScorekeeper
             waterAstheticButton1.Clicked += OnWaterAstheticButtonClicked;
             waterAstheticButton2.Clicked += OnWaterAstheticButtonClicked;
             roundInfoButton.Clicked += OnRoundInfoButtonClicked;
-
+            
             AbsoluteLayout deleteCourseLayout = new AbsoluteLayout
             {
                 Children =
@@ -293,7 +293,7 @@ namespace GolfScorekeeper
             AbsoluteLayout.SetLayoutBounds(waterAstheticButton2, new Rectangle(0.8, 1, 200, 70));
             AbsoluteLayout.SetLayoutFlags(waterAstheticButton2, AbsoluteLayoutFlags.PositionProportional);
 
-            AbsoluteLayout.SetLayoutBounds(hole, new Rectangle(0.85, .4, 30, 30));
+            AbsoluteLayout.SetLayoutBounds(hole, new Rectangle(0.85, .4, 5, 30));
             AbsoluteLayout.SetLayoutFlags(hole, AbsoluteLayoutFlags.PositionProportional);
 
             AbsoluteLayout.SetLayoutBounds(redTeeBoxMarker1, new Rectangle(0.78, .62, 30, 30));
@@ -348,18 +348,6 @@ namespace GolfScorekeeper
                     nextHoleButton,
                     previousHoleButton
                 }
-            };
-
-            finalLayout = new StackLayout
-            {
-                HorizontalOptions = LayoutOptions.Center,
-                Children =
-                    {
-                        new Label
-                        {
-                            Text = ""
-                        }
-                    }
             };
 
             finalScreenLayout = new CircleScrollView
@@ -453,11 +441,14 @@ namespace GolfScorekeeper
             nineOrEighteen = Convert.ToInt32((sender as Button).Text);
             customCoursePrompt.Text = "Enter course name:";
             customCourseEntry.Keyboard = Keyboard.Default;
+            customCourseEntry.TextColor = Color.Black;
+            customCourseEntry.BackgroundColor = Color.White;
+            customCourseEntry.Opacity = 10;
             customCourseEntry.MaxLength = 25;
             enterPageLayout.Children.Remove(customNineButton);
             enterPageLayout.Children.Remove(customEighteenButton);
-            enterPageLayout.Children.Add(customCourseEntry);
             enterPageLayout.Children.Add(customCourseNextButton);
+            enterPageLayout.Children.Add(customCourseEntry);
         }
         //Ask for course pars. Rejects if course name is invalid.
         protected void GoToParPrompt(object sender, System.EventArgs e)
@@ -469,7 +460,12 @@ namespace GolfScorekeeper
 
                 if (!courseNameRegex.IsMatch(customCourseEntry.Text))
                 {
-                    Toast.DisplayText("Only letters and spaces are allowed.");
+                    Toast.DisplayText("Only letters and <br>spaces are allowed.");
+                    return;
+                }
+                if (customCourseEntry.Text.Length == 0)
+                {
+                    Toast.DisplayText("Course name must be <br>at least one character long.");
                     return;
                 }
 
@@ -489,7 +485,7 @@ namespace GolfScorekeeper
                 string pars = customCourseEntry.Text;
                 if (pars.Length != 9)
                 {
-                    Toast.DisplayText("You must have 9 pars in the entry. Follow the example for formatting.");
+                    Toast.DisplayText("You must have 9 pars <br>in the entry. Follow the<br> example for formatting.");
                     return;
                 }
 
@@ -497,7 +493,7 @@ namespace GolfScorekeeper
 
                 if (!parRegex.IsMatch(pars))
                 {
-                    Toast.DisplayText("0s and symbols are not allowed.");
+                    Toast.DisplayText("0s and symbols <br>are not allowed.");
                     return;
                 }
 
@@ -512,7 +508,7 @@ namespace GolfScorekeeper
                 string pars = customCourseEntry.Text;
                 if (pars.Length != 9)
                 {
-                    Toast.DisplayText("You must have 9 pars in the entry. Follow the example for formatting.");
+                    Toast.DisplayText("You must have 9 pars <br>in the entry. Follow the<br> example for formatting.");
                     return;
                 }
 
@@ -520,7 +516,7 @@ namespace GolfScorekeeper
 
                 if (!parRegex.IsMatch(pars))
                 {
-                    Toast.DisplayText("0s and symbols are not allowed.");
+                    Toast.DisplayText("0s and symbols <br>are not allowed.");
                     return;
                 }
 
@@ -547,7 +543,7 @@ namespace GolfScorekeeper
                 MainPage.Navigation.RemovePage(ep);
                 if (result == 1)
                 {
-                    Toast.DisplayText("Current course information for " + currentCourseName + " has been overwritten.");
+                    Toast.DisplayText("Course information for <br>" + currentCourseName + "<br>has been overwritten.");
                 }
 
             }
@@ -563,7 +559,7 @@ namespace GolfScorekeeper
             else
             {
                 //Bring up course selection - it is a new game
-                GenerateCourseList(false);
+                GenerateCourseList(false); 
                 MainPage.Navigation.PushAsync(sp);
             }
         }
@@ -720,7 +716,7 @@ namespace GolfScorekeeper
         {
             if (courses.GetCourseCount() == 0)
             {
-                Toast.DisplayText("You have not added any courses yet. Go to 'Score Tracker' -> 'Add Course'.");
+                Toast.DisplayText("You have not added any<br> courses yet. Go to 'Score<br> Tracker' -> 'Add Course'.");
                 return;
             }
             GenerateCourseList(true);
@@ -785,7 +781,7 @@ namespace GolfScorekeeper
         {
             if (strokes == 0)
             {
-                Toast.DisplayText("Enter a score for this hole");
+                Toast.DisplayText("Enter a score <br>for this hole");
                 return;
             }
             scoreCard[currentHole - 1] = strokes;
@@ -822,7 +818,7 @@ namespace GolfScorekeeper
 
             if (strokes == 0)
             {
-                Toast.DisplayText("Enter a score before returning to previous holes");
+                Toast.DisplayText("Enter a score before <br>returning to previous holes");
                 return;
             }
             if (strokes != 0) {
@@ -1199,7 +1195,7 @@ namespace GolfScorekeeper
             if (midRound)
             {
                 if (currentCourseName == courseName)
-                {
+                { 
                     midRound = false;
                     var currentGameQueryResult = dbConnection.Query<CurrentGame>("select * from CurrentGame").FirstOrDefault();
                     if (currentGameQueryResult != null)
@@ -1226,7 +1222,7 @@ namespace GolfScorekeeper
 
         protected void OnAboutButtonClicked(object sender, System.EventArgs e)
         {
-            Toast.DisplayText("Developed by         Andrew Johnson      Version 1.0");
+            Toast.DisplayText("Developed by<br>Andrew Johnson<br>Version 1.0");
         }
 
         protected void OnWaterAstheticButtonClicked(object sender, System.EventArgs e)
@@ -1241,7 +1237,7 @@ namespace GolfScorekeeper
 
             if (courses.GetCourseCount() == 0)
             {
-                MainPage.Navigation.RemovePage(clp);
+                MainPage.Navigation.PopAsync();
             }
         }
 
@@ -1249,7 +1245,6 @@ namespace GolfScorekeeper
         {
             MainPage.Navigation.RemovePage(dp);
         }
-
         protected async void OnRoundInfoButtonClicked(object sender, System.EventArgs e)
         {
 

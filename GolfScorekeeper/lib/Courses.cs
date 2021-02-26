@@ -14,7 +14,15 @@ namespace GolfScorekeeper
 
         public int GetNineOrEighteen(string courseName)
         {
-            return courses[courseName].Length;
+            int[] value;
+            if (courses.TryGetValue(courseName, out value))
+            {
+                return value.Length;
+            }
+            else
+            {
+                return 0;
+            }
         }
         
         public int GetCoursePar(string courseName)
